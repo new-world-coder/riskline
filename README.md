@@ -1,10 +1,20 @@
 # riskline
 
+[![CI](https://github.com/new-world-coder/riskline/actions/workflows/ci.yml/badge.svg)](https://github.com/new-world-coder/riskline/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/new-world-coder/riskline)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/new-world-coder/riskline?include_prereleases)](https://github.com/new-world-coder/riskline/releases)
+[![Go Reference](https://pkg.go.dev/badge/github.com/new-world-coder/riskline.svg)](https://pkg.go.dev/github.com/new-world-coder/riskline)
+[![Go Report Card](https://goreportcard.com/badge/github.com/new-world-coder/riskline)](https://goreportcard.com/report/github.com/new-world-coder/riskline)
+
 Open-source EU AI Act risk classification — CLI and API, deterministic and auditable, not an LLM guessing.
+
+**Status:** Pre-1.0. APIs and the ruleset may change. Feedback via [Issues](https://github.com/new-world-coder/riskline/issues) is welcome — especially [misclassification reports](https://github.com/new-world-coder/riskline/issues/new?template=misclassification_report.md).
 
 You describe an AI system (purpose, data types, deployment context, autonomy, who it affects). You get back a risk tier — prohibited, high-risk, limited-risk, or minimal-risk — with clause references, a plain-language rationale, and recommended controls. The ruleset is versioned JSON, not a model making something up.
 
 **v1 does EU AI Act only.** No NIST, no ISO mappings, no dashboards, no evidence packs, no billing. If you need those, they're roadmap — not shipping claims.
+
+Distribution model borrows from Open Policy Agent and Trivy — single binary, no runtime, CI-friendly.
 
 ## Why this exists
 
@@ -15,7 +25,7 @@ This is the wedge: a small, embeddable engine + CLI + HTTP API with the same con
 ## Quick start (CLI)
 
 ```bash
-go install github.com/new-world-coder/riskline/cmd/riskline-cli@latest
+go install github.com/new-world-coder/riskline/cmd/riskline-cli@v0.1.0-alpha
 # or from this repo:
 go build -o bin/riskline-cli ./cmd/riskline-cli
 
