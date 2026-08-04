@@ -1,7 +1,7 @@
 name: ruleset-update
 about: Flag outdated or missing EU AI Act mappings
 title: "[ruleset] "
-labels: ruleset, validation
+labels: ruleset, validation, eu-ai-act
 assignees: ''
 ---
 

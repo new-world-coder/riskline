@@ -1,7 +1,7 @@
 name: misclassification-report
 about: Report a system you believe was classified incorrectly
 title: "[misclassification] "
-labels: misclassification, validation
+labels: misclassification, validation, eu-ai-act
 assignees: ''
 ---
 
