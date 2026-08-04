@@ -1,0 +1,284 @@
+openapi: 3.0.3
+info:
+  title: riskline API
+  description: |
+    Open-source EU AI Act risk classification — CLI and API, deterministic and auditable,
+    not an LLM guessing. Advisory tool only; not legal advice.
+  version: 0.1.0
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  contact:
+    name: New World Coder
+    url: https://github.com/new-world-coder/riskline
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /v1/classify:
+    post:
+      operationId: classifySystem
+      summary: Classify an AI system under the EU AI Act
+      description: |
+        Accepts a structured description of an AI system and returns a risk tier,
+        clause references, plain-language rationale, and recommended controls.
+      tags:
+        - Classification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifyRequest'
+            examples:
+              recruiting_screener:
+                summary: CV screening assistant
+                value:
+                  name: "Hiring Assist"
+                  purpose: "Screen job applicants and rank candidates for interview"
+                  data_types:
+                    - personal_data
+                    - employment_data
+                  deployment_context: saas_b2b
+                  autonomy_level: decision_support
+                  affected_population: job_applicants
+                  geographic_scope: eu
+      responses:
+        '200':
+          description: Classification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassifyResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness check
+      tags:
+        - Meta
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+
+components:
+  schemas:
+    ClassifyRequest:
+      type: object
+      required:
+        - purpose
+        - data_types
+        - deployment_context
+        - autonomy_level
+        - affected_population
+      properties:
+        name:
+          type: string
+          description: Optional human label for the system
+          maxLength: 200
+        purpose:
+          type: string
+          description: What the AI system is used for
+          minLength: 1
+          maxLength: 4000
+        data_types:
+          type: array
+          description: Categories of data the system processes
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/DataType'
+        deployment_context:
+          $ref: '#/components/schemas/DeploymentContext'
+        autonomy_level:
+          $ref: '#/components/schemas/AutonomyLevel'
+        affected_population:
+          $ref: '#/components/schemas/AffectedPopulation'
+        geographic_scope:
+          $ref: '#/components/schemas/GeographicScope'
+          default: eu
+        uses_biometric_categorisation:
+          type: boolean
+          default: false
+        real_time_remote_biometric_id:
+          type: boolean
+          default: false
+        social_scoring:
+          type: boolean
+          default: false
+        emotion_recognition_workplace_or_education:
+          type: boolean
+          default: false
+        manipulative_techniques:
+          type: boolean
+          default: false
+        exploits_vulnerabilities:
+          type: boolean
+          default: false
+
+    DataType:
+      type: string
+      enum:
+        - personal_data
+        - special_category_data
+        - biometric_data
+        - employment_data
+        - financial_credit_data
+        - education_data
+        - health_data
+        - law_enforcement_data
+        - publicly_available
+        - synthetic_or_non_personal
+        - other
+
+    DeploymentContext:
+      type: string
+      enum:
+        - saas_b2b
+        - saas_b2c
+        - on_prem
+        - embedded_product
+        - public_authority
+        - law_enforcement
+        - internal_only
+        - other
+
+    AutonomyLevel:
+      type: string
+      enum:
+        - content_generation
+        - decision_support
+        - automated_decision
+        - autonomous_action
+
+    AffectedPopulation:
+      type: string
+      enum:
+        - general_public
+        - customers
+        - employees
+        - job_applicants
+        - students
+        - patients
+        - credit_consumers
+        - suspects_or_accused
+        - children
+        - other
+
+    GeographicScope:
+      type: string
+      enum:
+        - eu
+        - eu_and_global
+        - non_eu
+        - unknown
+
+    RiskTier:
+      type: string
+      enum:
+        - prohibited
+        - high_risk
+        - limited_risk
+        - minimal_risk
+
+    ClassifyResponse:
+      type: object
+      required:
+        - risk_tier
+        - ruleset_version
+        - last_updated
+        - matched_rules
+        - rationale
+        - recommended_controls
+        - disclaimer
+      properties:
+        name:
+          type: string
+        risk_tier:
+          $ref: '#/components/schemas/RiskTier'
+        ruleset_version:
+          type: string
+          example: "eu-ai-act-2024-v0.1.0"
+        last_updated:
+          type: string
+          format: date
+          example: "2026-08-04"
+        matched_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchedRule'
+        rationale:
+          type: string
+        recommended_controls:
+          type: array
+          items:
+            type: string
+        judgment_calls:
+          type: array
+          description: Boundary cases where the ruleset made an explicit judgment call
+          items:
+            type: string
+        disclaimer:
+          type: string
+          example: >-
+            This classification is an advisory tool based on a versioned ruleset.
+            It is not legal advice and is not a substitute for qualified counsel
+            or a formal conformity assessment.
+
+    MatchedRule:
+      type: object
+      required:
+        - id
+        - tier
+        - article_or_annex
+        - summary
+        - ruleset_version
+        - last_updated
+      properties:
+        id:
+          type: string
+        tier:
+          $ref: '#/components/schemas/RiskTier'
+        article_or_annex:
+          type: string
+          example: "Annex III (4)(a)"
+        summary:
+          type: string
+        ruleset_version:
+          type: string
+        last_updated:
+          type: string
+          format: date
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - disclaimer
+      properties:
+        error:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        disclaimer:
+          type: string
