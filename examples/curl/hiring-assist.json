@@ -1,0 +1,9 @@
+{
+  "name": "Hiring Assist",
+  "purpose": "Screen job applicants and rank candidates for interview",
+  "data_types": ["personal_data", "employment_data"],
+  "deployment_context": "saas_b2b",
+  "autonomy_level": "decision_support",
+  "affected_population": "job_applicants",
+  "geographic_scope": "eu"
+}

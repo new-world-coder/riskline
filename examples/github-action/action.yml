@@ -1,0 +1,20 @@
+name: Classify AI system (EU AI Act)
+description: Run riskline-cli against a checked-in system description
+inputs:
+  file:
+    description: Path to YAML/JSON system description
+    required: true
+    default: ai-system.yaml
+runs:
+  using: composite
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.25.x"
+    - name: Install riskline-cli
+      shell: bash
+      run: go install github.com/new-world-coder/riskline/cmd/riskline-cli@latest
+    - name: Classify
+      shell: bash
+      run: riskline-cli --json "${{ inputs.file }}"
