@@ -1,0 +1,8 @@
+name: Support Bot
+purpose: Customer support chatbot for product questions
+data_types:
+  - personal_data
+deployment_context: saas_b2c
+autonomy_level: content_generation
+affected_population: customers
+geographic_scope: eu

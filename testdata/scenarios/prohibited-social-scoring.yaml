@@ -1,0 +1,9 @@
+name: Citizen Score
+purpose: Score citizens based on social behaviour and personal characteristics for access to public services
+data_types:
+  - personal_data
+deployment_context: public_authority
+autonomy_level: automated_decision
+affected_population: general_public
+geographic_scope: eu
+social_scoring: true

@@ -52,6 +52,16 @@ Contract: [`api/openapi.yaml`](api/openapi.yaml).
 
 Early access for a hosted endpoint: open a thread in [GitHub Discussions](https://github.com/new-world-coder/riskline/discussions) — no public price list on purpose.
 
+
+
+## Write-ups
+
+- [How we classify AI systems under the EU AI Act](docs/blog/01-how-we-classify-ai-systems-under-the-eu-ai-act.md)
+- [An open JSON schema for AI system risk classification](docs/blog/02-open-json-schema-for-ai-system-risk-classification.md)
+- [Why I built the compliance engine in Go](docs/blog/03-why-go-for-a-compliance-engine.md)
+
+See also [ROADMAP.md](ROADMAP.md) and ready-to-post copy in [`content/social/LAUNCH_COPY.md`](content/social/LAUNCH_COPY.md).
+
 ## Disclaimer
 
 Every response includes this, and we keep a test that checks it stays put:

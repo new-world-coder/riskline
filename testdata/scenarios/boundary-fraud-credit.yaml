@@ -1,0 +1,9 @@
+name: Loan Guard
+purpose: Evaluate creditworthiness and produce a credit score for consumer lending decisions
+data_types:
+  - financial_credit_data
+  - personal_data
+deployment_context: saas_b2b
+autonomy_level: automated_decision
+affected_population: credit_consumers
+geographic_scope: eu
