@@ -1,0 +1,27 @@
+{
+  "name": "Hiring Assist",
+  "risk_tier": "high_risk",
+  "ruleset_version": "eu-ai-act-2024-v0.1.0",
+  "last_updated": "2026-08-04",
+  "matched_rules": [
+    {
+      "id": "high-risk-recruitment",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (4)(a)",
+      "summary": "AI used for recruitment or selection of natural persons — including placing targeted job ads, analysing/filtering applications, and evaluating candidates — is high-risk.",
+      "ruleset_version": "eu-ai-act-2024-v0.1.0",
+      "last_updated": "2026-08-04"
+    }
+  ],
+  "rationale": "Classified as high_risk because 1 rule(s) matched. Highest-severity matches: Annex III (4)(a) (high-risk-recruitment).",
+  "recommended_controls": [
+    "Establish a risk management system and data governance for the system",
+    "Ensure human oversight of ranking/filtering decisions",
+    "Keep logs and technical documentation for conformity assessment",
+    "Assess bias and discrimination risks in candidate scoring"
+  ],
+  "judgment_calls": [
+    "high-risk-recruitment: Matching on purpose keywords or job_applicants population is a pragmatic proxy; borderline HR analytics that only aggregate headcount may be over-classified and should be reported via misclassification issues."
+  ],
+  "disclaimer": "This classification is an advisory tool based on a versioned ruleset. It is not legal advice and is not a substitute for qualified counsel or a formal conformity assessment."
+}
