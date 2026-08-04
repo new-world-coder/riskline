@@ -1,0 +1,246 @@
+{
+  "version": "eu-ai-act-2024-v0.1.0",
+  "last_updated": "2026-08-04",
+  "framework": "Regulation (EU) 2024/1689 (EU AI Act)",
+  "notes": [
+    "v1 covers prohibited practices (Art. 5), a prioritized Annex III high-risk subset, and limited-risk transparency (Art. 50).",
+    "Full Annex III coverage is intentionally deferred — better 8 tested categories than a shallow full list."
+  ],
+  "rules": [
+    {
+      "id": "prohibited-social-scoring",
+      "tier": "prohibited",
+      "article_or_annex": "Article 5(1)(c)",
+      "summary": "AI systems that evaluate or classify people based on social behaviour or personal characteristics, producing a social score leading to detrimental or unfavourable treatment, are prohibited.",
+      "when": {
+        "any_flags": ["social_scoring"]
+      },
+      "recommended_controls": [
+        "Do not deploy; redesign the use case away from social scoring",
+        "Document why the prior design was discontinued"
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "prohibited-manipulation",
+      "tier": "prohibited",
+      "article_or_annex": "Article 5(1)(a)",
+      "summary": "AI systems that deploy subliminal, manipulative, or deceptive techniques to materially distort behaviour and cause significant harm are prohibited.",
+      "when": {
+        "any_flags": ["manipulative_techniques"]
+      },
+      "recommended_controls": [
+        "Do not deploy manipulative interaction patterns",
+        "Review UX and model objectives for covert influence"
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "prohibited-exploit-vulnerabilities",
+      "tier": "prohibited",
+      "article_or_annex": "Article 5(1)(b)",
+      "summary": "AI systems that exploit vulnerabilities of a specific group due to age, disability, or social/economic situation to materially distort behaviour and cause significant harm are prohibited.",
+      "when": {
+        "any_flags": ["exploits_vulnerabilities"]
+      },
+      "recommended_controls": [
+        "Remove targeting of vulnerable groups for behavioural distortion",
+        "Add safeguards and human review before any similar feature ships"
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "prohibited-realtime-remote-biometric-id",
+      "tier": "prohibited",
+      "article_or_annex": "Article 5(1)(h)",
+      "summary": "Real-time remote biometric identification in publicly accessible spaces for law enforcement is prohibited, subject to narrow statutory exceptions not modelled in this ruleset.",
+      "when": {
+        "any_flags": ["real_time_remote_biometric_id"],
+        "deployment_contexts": ["law_enforcement", "public_authority"]
+      },
+      "match": "all_groups",
+      "recommended_controls": [
+        "Do not enable real-time remote biometric ID in public spaces without a confirmed legal exception",
+        "Seek qualified counsel before any law-enforcement biometric deployment"
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Art. 5(1)(h) has listed exceptions (e.g. searching for certain victims/suspects). v1 treats any affirmative real_time_remote_biometric_id flag in LE/public-authority context as prohibited and flags the exception gap for human review."
+    },
+    {
+      "id": "prohibited-emotion-recognition-work-edu",
+      "tier": "prohibited",
+      "article_or_annex": "Article 5(1)(f)",
+      "summary": "AI systems that infer emotions of natural persons in the workplace or education institutions are prohibited, with limited exceptions (e.g. medical/safety) not modelled here.",
+      "when": {
+        "any_flags": ["emotion_recognition_workplace_or_education"]
+      },
+      "recommended_controls": [
+        "Disable emotion inference features in workplace and education deployments",
+        "Confirm whether any statutory exception could apply before reconsidering"
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Exceptions for medical or safety reasons are not auto-detected from free-text purpose; flagged for human review."
+    },
+    {
+      "id": "high-risk-recruitment",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (4)(a)",
+      "summary": "AI used for recruitment or selection of natural persons — including placing targeted job ads, analysing/filtering applications, and evaluating candidates — is high-risk.",
+      "when": {
+        "affected_populations": ["job_applicants"],
+        "purpose_keywords": ["recruit", "hiring", "hire", "cv screen", "resume", "candidate", "job applicant", "applicant screen", "talent"],
+        "data_types": ["employment_data"]
+      },
+      "match": "any_group",
+      "recommended_controls": [
+        "Establish a risk management system and data governance for the system",
+        "Ensure human oversight of ranking/filtering decisions",
+        "Keep logs and technical documentation for conformity assessment",
+        "Assess bias and discrimination risks in candidate scoring"
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Matching on purpose keywords or job_applicants population is a pragmatic proxy; borderline HR analytics that only aggregate headcount may be over-classified and should be reported via misclassification issues."
+    },
+    {
+      "id": "high-risk-employment-decisions",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (4)(b)",
+      "summary": "AI intended for decisions on promotion, termination, task allocation, or monitoring/evaluating performance and behaviour of workers is high-risk.",
+      "when": {
+        "affected_populations": ["employees"],
+        "purpose_keywords": ["promotion", "termination", "fire", "performance review", "employee monitor", "workforce monitor", "task allocation", "productivity score"]
+      },
+      "match": "all_groups",
+      "recommended_controls": [
+        "Provide meaningful human oversight of employment decisions",
+        "Inform workers about AI use affecting them",
+        "Document intended purpose and limits of monitoring"
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "high-risk-creditworthiness",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (5)(b)",
+      "summary": "AI used to evaluate the creditworthiness of natural persons or establish their credit score is high-risk (excluding fraud detection uses carved out in the Act).",
+      "when": {
+        "affected_populations": ["credit_consumers"],
+        "data_types": ["financial_credit_data"],
+        "purpose_keywords": ["credit score", "creditworth", "loan decision", "lending decision", "credit assessment"]
+      },
+      "match": "any_group",
+      "recommended_controls": [
+        "Run a conformity assessment appropriate to the credit use case",
+        "Ensure transparency of scoring factors to affected persons where required",
+        "Monitor for discriminatory outcomes across protected groups"
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Fraud-detection carve-out is not inferred automatically; systems labelled only as fraud detection may still match on financial_credit_data and need a misclassification review."
+    },
+    {
+      "id": "high-risk-biometric-categorisation",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (1)(b)",
+      "summary": "AI systems intended for biometric categorisation according to sensitive or protected attributes are high-risk (distinct from prohibited real-time remote biometric identification).",
+      "when": {
+        "any_flags": ["uses_biometric_categorisation"],
+        "data_types": ["biometric_data"]
+      },
+      "match": "any_group",
+      "recommended_controls": [
+        "Treat as high-risk biometric system: quality management, logging, human oversight",
+        "Minimise sensitive attribute inference; justify necessity",
+        "Separate this path clearly from any real-time public-space identification features"
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "high-risk-law-enforcement-risk-scoring",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (6)(a)",
+      "summary": "AI used by or on behalf of law enforcement to assess an individual's risk of offending or reoffending, or risk to victims, is high-risk (subject to prohibited-practice checks first).",
+      "when": {
+        "deployment_contexts": ["law_enforcement"],
+        "affected_populations": ["suspects_or_accused"],
+        "data_types": ["law_enforcement_data"],
+        "purpose_keywords": ["recidivism", "reoffend", "risk of offending", "suspect risk", "predictive policing", "risk score"]
+      },
+      "match": "any_group",
+      "recommended_controls": [
+        "Apply high-risk obligations for law-enforcement AI",
+        "Ensure strict access control and logging",
+        "Verify the use is not a prohibited social-scoring or biometric practice"
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Deployment context law_enforcement alone is enough to match in v1 when combined with risk-scoring keywords OR LE data OR suspects population — may over-include admin tooling; track via misclassification reports."
+    },
+    {
+      "id": "high-risk-education-admissions",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (3)(a)",
+      "summary": "AI used to determine access or admission to education or vocational training institutions is high-risk.",
+      "when": {
+        "affected_populations": ["students"],
+        "purpose_keywords": ["admission", "admissions", "enrol", "enroll", "school placement", "university admission"]
+      },
+      "match": "all_groups",
+      "recommended_controls": [
+        "Human oversight of admission decisions",
+        "Bias testing across demographic groups",
+        "Clear documentation of decision criteria"
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "high-risk-essential-private-services",
+      "tier": "high_risk",
+      "article_or_annex": "Annex III (5)(c)",
+      "summary": "AI used to evaluate eligibility for essential private services — including health services and life/health insurance pricing/underwriting in scope of the Annex — can be high-risk.",
+      "when": {
+        "affected_populations": ["patients"],
+        "data_types": ["health_data"],
+        "purpose_keywords": ["insurance underwriting", "eligibility", "claim decision", "health insurance"]
+      },
+      "match": "any_group",
+      "recommended_controls": [
+        "Confirm whether the specific service falls under Annex III (5)",
+        "Apply high-risk quality and oversight controls if in scope"
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Annex III (5)(c) wording is nuanced; v1 uses a coarse patients/health/insurance heuristic."
+    },
+    {
+      "id": "limited-risk-chatbot-transparency",
+      "tier": "limited_risk",
+      "article_or_annex": "Article 50(1)",
+      "summary": "Providers of AI systems intended to interact directly with natural persons must inform those persons that they are interacting with an AI system, unless obvious from the context.",
+      "when": {
+        "autonomy_levels": ["content_generation", "decision_support"],
+        "purpose_keywords": ["chatbot", "assistant", "conversational", "customer support bot", "virtual agent"]
+      },
+      "match": "all_groups",
+      "recommended_controls": [
+        "Disclose AI interaction to end users at the start of the conversation",
+        "Keep disclosure clear and accessible"
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Art. 50 applies more broadly than chatbots; requiring both an interactive autonomy level and chatbot-like purpose keywords may under-detect non-chat interactive systems."
+    },
+    {
+      "id": "limited-risk-synthetic-content",
+      "tier": "limited_risk",
+      "article_or_annex": "Article 50(2)",
+      "summary": "Providers of AI systems generating synthetic audio, image, video, or text content must ensure outputs are marked in a machine-readable format where technically feasible.",
+      "when": {
+        "autonomy_levels": ["content_generation"],
+        "purpose_keywords": ["generate image", "generate video", "generate audio", "deepfake", "synthetic media", "text generation", "llm"]
+      },
+      "match": "all_groups",
+      "recommended_controls": [
+        "Implement machine-readable content marking where feasible",
+        "Document cases where marking is not technically feasible"
+      ],
+      "judgment_call": false
+    }
+  ]
+}
