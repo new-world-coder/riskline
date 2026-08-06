@@ -206,11 +206,14 @@
 
   // Soft hero parallax
   if (heroPlane && !reduceMotion) {
+    const heroOutput = document.getElementById("hero-output");
     window.addEventListener(
       "scroll",
       () => {
         const y = Math.min(window.scrollY, 400);
-        heroPlane.style.setProperty("--parallax", y * 0.18 + "px");
+        const offset = y * 0.18 + "px";
+        heroPlane.style.setProperty("--parallax", offset);
+        if (heroOutput) heroOutput.style.setProperty("--parallax", offset);
       },
       { passive: true }
     );
