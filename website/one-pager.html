@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RiskLine — One-pager</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <style>
+    body.one-pager { padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .one-pager-header h1 { font-family: var(--display); font-size: 2rem; margin: 0; }
+    .one-pager-header p { color: var(--text-muted); margin: 0.25rem 0 0; }
+    .one-pager section { padding: 1.25rem 0; border-top: 1px solid var(--border); }
+    .one-pager h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 0 0 0.5rem; font-family: var(--mono); }
+    .one-pager ul { margin: 0; padding-left: 1.2rem; }
+  </style>
+</head>
+<body class="one-pager">
+  <p class="no-print" style="margin-bottom:1rem;"><a href="index.html">← Back to site</a> · <button onclick="window.print()" class="btn btn-secondary" style="cursor:pointer;">Print / Save PDF</button></p>
+
+  <header class="one-pager-header">
+    <h1>RiskLine</h1>
+    <p>Offline EU AI Act risk classification — CLI &amp; API</p>
+  </header>
+
+  <section>
+    <h2>Problem</h2>
+    <p>Engineering teams inventorying AI systems for the EU AI Act need classification that runs in CI, stays offline, and shows which article fired — not a portal that guesses with an LLM.</p>
+  </section>
+
+  <section>
+    <h2>Who it's for</h2>
+    <p>Platform engineers, compliance-aware developers, and design partners building AI governance into pipelines — before buying a full GRC suite.</p>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <ol>
+      <li>Describe the AI system (purpose, data, context, autonomy, affected population).</li>
+      <li>Engine matches against a versioned EU AI Act ruleset.</li>
+      <li>Get tier + clause refs + rationale + recommended controls + disclaimer.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Features</h2>
+    <ul>
+      <li>Deterministic classification — versioned, auditable JSON ruleset</li>
+      <li>Offline-first CLI — no data leaves your machine</li>
+      <li>HTTP API with OpenAPI contract</li>
+      <li>Single Go binary — CI-friendly (OPA/Trivy distribution model)</li>
+      <li>Apache 2.0 open source</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Quick start</h2>
+    <pre style="font-family:var(--mono);font-size:0.85rem;background:var(--bg-elevated);padding:1rem;border-radius:8px;border:1px solid var(--border);overflow-x:auto;">go install github.com/new-world-coder/riskline/cmd/riskline-cli@v0.1.0-alpha
+
+riskline-cli examples/curl/hiring-assist.yaml
+riskline-cli --json examples/curl/hiring-assist.yaml</pre>
+  </section>
+
+  <section>
+    <h2>Sample output</h2>
+    <p><strong>Hiring Assist</strong> → <code>high_risk</code> · Annex III (4)(a) recruitment</p>
+    <pre style="font-family:var(--mono);font-size:0.78rem;background:var(--bg-elevated);padding:1rem;border-radius:8px;border:1px solid var(--border);overflow-x:auto;">System:     Hiring Assist
+Risk tier:  high_risk
+Matched:    high-risk-recruitment → Annex III (4)(a)
+
+Controls:
+  - Risk management system and data governance
+  - Human oversight of ranking/filtering
+  - Logs and technical documentation
+  - Bias and discrimination assessment</pre>
+  </section>
+
+  <section>
+    <h2>Status &amp; disclaimer</h2>
+    <p><strong>v0.1.0-alpha</strong> — pre-1.0. EU AI Act only. Partial Annex III coverage.</p>
+    <p style="font-size:0.9rem;color:var(--text-muted);">This classification is an advisory tool based on a versioned ruleset. It is not legal advice and is not a substitute for qualified counsel or a formal conformity assessment.</p>
+    <p><strong>github.com/new-world-coder/riskline</strong></p>
+  </section>
+</body>
+</html>

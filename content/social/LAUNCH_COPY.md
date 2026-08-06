@@ -70,9 +70,50 @@ go install github.com/new-world-coder/riskline/cmd/riskline-cli@v0.1.0-alpha
 
 https://github.com/new-world-coder/riskline
 
+## Product Hunt
+
+**Tagline (60 chars max):**
+Offline EU AI Act risk classification — CLI & API
+
+**Description:**
+RiskLine is an open-source CLI and API that classifies AI systems under the EU AI Act into risk tiers — prohibited, high-risk, limited-risk, or minimal-risk — using a versioned JSON ruleset, not an LLM.
+
+You describe your AI system (purpose, data types, deployment context, autonomy, who it affects) and get back a risk tier with clause references, a plain-language rationale, and recommended controls.
+
+Built for engineering teams who live in CI and the terminal, not a compliance portal.
+
+**Key features:**
+- Deterministic classification with a versioned, auditable ruleset
+- Offline-first — no data leaves your machine
+- Single Go binary, CI-friendly (inspired by OPA and Trivy)
+- CLI for local use, HTTP API for integration
+- OpenAPI spec included
+- Apache 2.0 licensed
+
+**First comment (post as maker):**
+Hey Product Hunt! I built RiskLine because most "AI governance" tools want you inside a portal — but engineering teams already live in CI and the terminal.
+
+Classification that can't run offline, can't be diffed, and can't explain which article fired is hard to trust. RiskLine is a small, embeddable engine that gives you a risk tier with clause references you can actually verify.
+
+It's pre-1.0 and I'm actively collecting misclassification reports to validate the ruleset. Would love feedback from anyone dealing with EU AI Act compliance.
+
+`go install github.com/new-world-coder/riskline/cmd/riskline-cli@v0.1.0-alpha`
+
+**Topics:** Open Source, Developer Tools, Artificial Intelligence, Compliance, Legal Tech
+
+**Thumbnail/Logo:** Export `website/assets/og.svg` to PNG, or use the Product Hunt logo at `assets/riskline-producthunt-logo.png` (240×240).
+
+**Website:** https://new-world-coder.github.io/riskline/ (enable GitHub Pages from repo Settings → Pages → GitHub Actions)
+
+**Links:**
+- GitHub: https://github.com/new-world-coder/riskline
+- Methodology write-up: https://github.com/new-world-coder/riskline/blob/main/docs/blog/01-how-we-classify-ai-systems-under-the-eu-ai-act.md
+
+---
+
 ## Suggested posting order
 
-1. Push content to GitHub (done via this PR/commit)
+1. Push content to GitHub; enable Pages (workflow: `.github/workflows/pages.yml`)
 2. Publish Post 1 to dev.to as draft → review → publish
 3. Same day: LinkedIn + X with link to Post 1 or repo
 4. Next day: Show HN (once you can answer comments for a few hours)
