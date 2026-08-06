@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RiskLine — Offline EU AI Act risk classification</title>
+  <meta name="description" content="Deterministic EU AI Act risk classification CLI and API. Versioned JSON ruleset, not an LLM guessing compliance.">
+  <meta property="og:title" content="RiskLine — Offline EU AI Act risk classification">
+  <meta property="og:description" content="Classify AI systems into prohibited, high-risk, limited-risk, or minimal-risk tiers with clause references. Runs offline in CI.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://new-world-coder.github.io/riskline/assets/og.svg">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favico.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="index.html">Risk<span>Line</span></a>
+      <nav class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#why">Why</a>
+        <a href="one-pager.html">One-pager</a>
+        <a href="https://github.com/new-world-coder/riskline">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="eyebrow">Open source · Apache 2.0</p>
+          <h1>Offline EU AI Act risk classification</h1>
+          <p class="hero-lead">
+            Describe an AI system. Get a risk tier with article references, rationale, and recommended controls — from a versioned ruleset, not an LLM.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/new-world-coder/riskline">View on GitHub</a>
+            <a class="btn btn-secondary" href="https://github.com/new-world-coder/riskline#quick-start-cli">Install CLI</a>
+          </div>
+        </div>
+
+        <div class="terminal" aria-label="Terminal demo">
+          <div class="terminal-bar">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="terminal-title">riskline-cli — demo</span>
+          </div>
+          <div class="terminal-body" id="terminal-output" aria-live="polite"></div>
+          <div class="scenario-tabs">
+            <button class="scenario-tab active" data-scenario="prohibited" type="button">Citizen Score</button>
+            <button class="scenario-tab" data-scenario="high" type="button">Hiring Assist</button>
+            <button class="scenario-tab" data-scenario="limited" type="button">Support Bot</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="container">
+        <h2>How it works</h2>
+        <div class="steps">
+          <article class="step-card">
+            <p class="step-num">01</p>
+            <h3>Describe the system</h3>
+            <p>Purpose, data types, deployment context, autonomy level, and who it affects — YAML or JSON.</p>
+          </article>
+          <article class="step-card">
+            <p class="step-num">02</p>
+            <h3>Get a tier + clause refs</h3>
+            <p>Prohibited, high-risk, limited-risk, or minimal-risk — with matched rules, rationale, and controls.</p>
+          </article>
+          <article class="step-card">
+            <p class="step-num">03</p>
+            <h3>Run in CI</h3>
+            <p>Single Go binary. Offline by default. Same contract via CLI or HTTP API. Diff the ruleset like code.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="container">
+        <h2>Why RiskLine</h2>
+        <div class="why-grid">
+          <div class="why-item">
+            <strong>Offline-first</strong>
+            <span>No data leaves your machine by default. A compliance tool that phones home is a trust problem.</span>
+          </div>
+          <div class="why-item">
+            <strong>Deterministic</strong>
+            <span>Same input, same output. Versioned JSON ruleset you can audit, diff, and challenge.</span>
+          </div>
+          <div class="why-item">
+            <strong>CI-native</strong>
+            <span>Distribution model borrowed from OPA and Trivy — one binary, no runtime, pipeline-friendly.</span>
+          </div>
+          <div class="why-item">
+            <strong>Explainable</strong>
+            <span>Every result cites which article or annex fired, plus judgment-call notes where the ruleset hedges.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2>Honest limits</h2>
+        <div class="limits">
+          <ul>
+            <li><strong>Pre-1.0.</strong> APIs and the ruleset may change. Misclassification reports are how we validate.</li>
+            <li><strong>EU AI Act only.</strong> No NIST, ISO, or multi-jurisdiction packs in v1.</li>
+            <li><strong>Partial Annex III.</strong> Recruitment, employment, credit, biometrics, and adjacent cases — not full coverage yet.</li>
+            <li><strong>Advisory, not legal advice.</strong> Every response includes a disclaimer. Not a substitute for counsel or formal conformity assessment.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>Apache 2.0 · <a href="https://github.com/new-world-coder">New World Coder</a></span>
+      <div class="footer-links">
+        <a href="https://github.com/new-world-coder/riskline/blob/main/docs/blog/01-how-we-classify-ai-systems-under-the-eu-ai-act.md">Methodology</a>
+        <a href="https://github.com/new-world-coder/riskline/issues/new?template=misclassification_report.md">Report misclassification</a>
+        <a href="one-pager.html">Printable one-pager</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/terminal-demo.js"></script>
+</body>
+</html>

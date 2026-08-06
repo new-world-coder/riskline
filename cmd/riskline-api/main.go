@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/new-world-coder/riskline/internal/httpserver"
 	"github.com/new-world-coder/riskline/pkg/engine"
@@ -22,7 +23,12 @@ func main() {
 
 	srv := httpserver.New(eng)
 	log.Printf("riskline-api listening on %s (POST /v1/classify)", *addr)
-	if err := http.ListenAndServe(*addr, srv.Handler()); err != nil {
+	server := &http.Server{
+		Addr:              *addr,
+		Handler:           srv.Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

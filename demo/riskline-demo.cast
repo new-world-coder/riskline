@@ -1,0 +1,10 @@
+{"version": 2, "width": 80, "height": 24, "timestamp": 1722902400, "env": {"SHELL": "/bin/zsh", "TERM": "xterm-256color"}}
+[0.0, "o", "$ go install github.com/new-world-coder/riskline/cmd/riskline-cli@v0.1.0-alpha\r\n"]
+[1.2, "o", "$ riskline-cli testdata/scenarios/prohibited-social-scoring.yaml\r\n"]
+[1.8, "o", "System:           Citizen Score\r\nRisk tier:        prohibited\r\nRuleset:          eu-ai-act-2024-v0.1.0 (2026-08-04)\r\n\r\nMatched rules\r\nprohibited-social-scoring  prohibited  Article 5(1)(c)\r\n"]
+[4.0, "o", "$ riskline-cli testdata/scenarios/high-risk-hiring.yaml\r\n"]
+[4.5, "o", "System:           Hiring Assist\r\nRisk tier:        high_risk\r\nRuleset:          eu-ai-act-2024-v0.1.0 (2026-08-04)\r\n\r\nMatched rules\r\nhigh-risk-recruitment  high_risk  Annex III (4)(a)\r\n"]
+[7.0, "o", "$ riskline-cli testdata/scenarios/limited-risk-chatbot.yaml\r\n"]
+[7.5, "o", "System:           Support Bot\r\nRisk tier:        limited_risk\r\nRuleset:          eu-ai-act-2024-v0.1.0 (2026-08-04)\r\n\r\nMatched rules\r\nlimited-risk-chatbot-transparency  limited_risk  Article 50(1)\r\n"]
+[10.0, "o", "$ riskline-cli --json testdata/scenarios/high-risk-hiring.yaml | head -5\r\n"]
+[10.5, "o", "{\r\n  \"name\": \"Hiring Assist\",\r\n  \"risk_tier\": \"high_risk\",\r\n  \"ruleset_version\": \"eu-ai-act-2024-v0.1.0\",\r\n  ...\r\n}\r\n"]

@@ -16,6 +16,8 @@ You describe an AI system (purpose, data types, deployment context, autonomy, wh
 
 Distribution model borrows from Open Policy Agent and Trivy — single binary, no runtime, CI-friendly.
 
+**Website:** [new-world-coder.github.io/riskline](https://new-world-coder.github.io/riskline/) · [Printable one-pager](https://new-world-coder.github.io/riskline/one-pager.html)
+
 ## Why this exists
 
 Most "AI governance" tools want you in a portal. Engineering teams already live in CI and the terminal. Classification that can't run offline, can't be diffed, and can't explain *which article fired* is hard to trust — especially when the output looks like legal judgment.
