@@ -70,11 +70,25 @@ go install github.com/new-world-coder/riskline/cmd/riskline-cli@v0.1.0-alpha
 
 https://github.com/new-world-coder/riskline
 
+Website: https://new-world-coder.github.io/riskline/
+One-pager: https://new-world-coder.github.io/riskline/one-pager.html
+Demo cast / script: [`demo/`](../../demo/)
+
+## Product Hunt (when you post)
+
+**Tagline (60 chars max):**
+Offline EU AI Act risk classification — CLI & API
+
+**Thumbnail / logo:** Use [`website/assets/og.png`](../../website/assets/og.png) or the favicon wordmark in [`website/assets/favicon.svg`](../../website/assets/favicon.svg).
+
+**Demo video:** Follow [`demo/DEMO_SCRIPT.md`](../../demo/DEMO_SCRIPT.md); convert [`demo/riskline-demo.cast`](../../demo/riskline-demo.cast) with `agg` to gif/mp4.
+
 ## Suggested posting order
 
 1. Push content to GitHub (done via this PR/commit)
 2. Publish Post 1 to dev.to as draft → review → publish
-3. Same day: LinkedIn + X with link to Post 1 or repo
+3. Same day: LinkedIn + X with link to Post 1, site, or repo
 4. Next day: Show HN (once you can answer comments for a few hours)
 5. Same week: r/golang, then r/opensource (don't crosspost dump)
 6. Post 2 and Post 3 spaced 3–7 days apart
+

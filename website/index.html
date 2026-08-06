@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RiskLine — Offline EU AI Act risk classification</title>
+    <meta
+      name="description"
+      content="Open-source CLI and API that classifies AI systems under the EU AI Act using a versioned JSON ruleset — deterministic and auditable, not an LLM guessing."
+    />
+    <meta property="og:title" content="RiskLine — Offline EU AI Act risk classification" />
+    <meta
+      property="og:description"
+      content="CLI + API. Deterministic ruleset. Offline-first. Built for engineering teams who live in CI, not a compliance portal."
+    />
+    <meta property="og:image" content="assets/og.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,450;9..144,550;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/site.css" />
+  </head>
+  <body>
+    <div class="site-bg" aria-hidden="true"></div>
+
+    <header class="wrap">
+      <nav class="nav" aria-label="Primary">
+        <a class="nav-brand" href="./">RiskLine</a>
+        <ul class="nav-links">
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="one-pager.html">One-pager</a></li>
+          <li>
+            <a href="https://github.com/new-world-coder/riskline" rel="noopener">GitHub</a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero wrap" aria-labelledby="brand-hero">
+        <div class="hero-plane" id="hero-plane" aria-hidden="true"></div>
+        <pre class="hero-output" id="hero-output" aria-hidden="true"><span class="hi">$</span> riskline-cli hiring-assist.yaml
+
+System:           Hiring Assist
+Risk tier:        <span class="tier">high_risk</span>
+Ruleset:          eu-ai-act-2024-v0.1.0
+
+Matched rules
+ID                     TIER       REF
+high-risk-recruitment  high_risk  Annex III (4)(a)
+
+Recommended controls
+  - Establish a risk management system
+  - Ensure human oversight of ranking
+  - Keep logs for conformity assessment</pre>
+        <div class="hero-content">
+          <h1 class="brand-hero" id="brand-hero">RiskLine</h1>
+          <p class="hero-headline">Offline EU AI Act risk classification</p>
+          <p class="hero-lede">
+            Describe an AI system. Get a risk tier with clause references — from a
+            versioned JSON ruleset, not a model guessing compliance.
+          </p>
+          <div class="cta-row">
+            <a
+              class="btn btn-primary"
+              href="https://github.com/new-world-coder/riskline"
+              rel="noopener"
+              >View on GitHub</a
+            >
+            <a class="btn btn-ghost" href="#demo">Watch the demo</a>
+            <div class="install-chip" title="Install the CLI">
+              <code id="install-cmd"
+                >go install github.com/new-world-coder/riskline/cmd/riskline-cli@v0.1.0-alpha</code
+              >
+              <button type="button" id="copy-install" aria-label="Copy install command">
+                copy
+              </button>
+            </div>
+          </div>
+          <p class="status-note">
+            Pre-1.0 · Apache 2.0 · Advisory only — not legal advice
+          </p>
+        </div>
+      </section>
+
+      <section class="demo" id="demo" aria-labelledby="demo-title">
+        <div class="wrap">
+          <p class="section-label">Live walkthrough</p>
+          <h2 class="section-title" id="demo-title">Classify three systems in your terminal</h2>
+          <p class="section-lede">
+            Same fixtures that ship in the repo. Output is pre-recorded from the real
+            CLI — no network, no LLM.
+          </p>
+
+          <div class="demo-controls" role="group" aria-label="Demo scenarios">
+            <button
+              type="button"
+              class="scenario-btn"
+              data-scenario="prohibited"
+              aria-pressed="true"
+            >
+              <span class="tier-dot prohibited" aria-hidden="true"></span>Citizen Score
+            </button>
+            <button
+              type="button"
+              class="scenario-btn"
+              data-scenario="high_risk"
+              aria-pressed="false"
+            >
+              <span class="tier-dot high_risk" aria-hidden="true"></span>Hiring Assist
+            </button>
+            <button
+              type="button"
+              class="scenario-btn"
+              data-scenario="limited_risk"
+              aria-pressed="false"
+            >
+              <span class="tier-dot limited_risk" aria-hidden="true"></span>Support Bot
+            </button>
+          </div>
+
+          <div class="terminal" aria-live="polite">
+            <div class="terminal-bar">
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-title">riskline-cli — offline</span>
+            </div>
+            <pre class="terminal-body" id="terminal-body"></pre>
+          </div>
+          <div
+            class="tier-badge"
+            id="tier-badge"
+            aria-hidden="true"
+          ></div>
+        </div>
+      </section>
+
+      <section id="how" aria-labelledby="how-title">
+        <div class="wrap">
+          <p class="section-label">How it works</p>
+          <h2 class="section-title" id="how-title">Describe the system. Read the clause.</h2>
+          <p class="section-lede">
+            One contract for CLI and HTTP API. Distribution model borrows from OPA and
+            Trivy — single binary, CI-friendly.
+          </p>
+          <ol class="steps">
+            <li class="step">
+              <span class="step-num">01</span>
+              <h3>Author a description</h3>
+              <p>
+                YAML or JSON: purpose, data types, deployment context, autonomy, who it
+                affects — plus optional Article&nbsp;5 flags.
+              </p>
+            </li>
+            <li class="step">
+              <span class="step-num">02</span>
+              <h3>Run the classifier</h3>
+              <p>
+                <code>riskline-cli system.yaml</code> offline, or
+                <code>POST /v1/classify</code> against the thin API.
+              </p>
+            </li>
+            <li class="step">
+              <span class="step-num">03</span>
+              <h3>Get an auditable result</h3>
+              <p>
+                Tier, matched rules with article/annex refs, rationale, recommended
+                controls, judgment calls, and a mandatory disclaimer.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="why" aria-labelledby="why-title">
+        <div class="wrap">
+          <p class="section-label">Why this exists</p>
+          <h2 class="section-title" id="why-title">Built for pipelines, not portals</h2>
+          <p class="section-lede">
+            Most AI governance tools want you inside a dashboard. Engineering teams
+            already live in CI and the terminal.
+          </p>
+          <ul class="why-list">
+            <li>
+              <span class="why-kicker">Deterministic</span>
+              <h3>Versioned JSON ruleset</h3>
+              <p>
+                Every result cites which rule fired. Diff the ruleset. Pin
+                <code>ruleset_version</code> in CI.
+              </p>
+            </li>
+            <li>
+              <span class="why-kicker">Offline-first</span>
+              <h3>Nothing leaves your machine</h3>
+              <p>
+                The CLI reads local files only. It does not phone home. See PRIVACY.md.
+              </p>
+            </li>
+            <li>
+              <span class="why-kicker">CI-native</span>
+              <h3>Single Go binary</h3>
+              <p>
+                Install once, run in GitHub Actions or pre-commit. OpenAPI contract
+                included for the API surface.
+              </p>
+            </li>
+            <li>
+              <span class="why-kicker">Honest</span>
+              <h3>Advisory, not a verdict</h3>
+              <p>
+                Judgment calls are surfaced. Misclassification reports are the
+                validation loop — not marketing claims.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="limits" id="limits" aria-labelledby="limits-title">
+        <div class="wrap limits-inner">
+          <p class="section-label">Scope</p>
+          <h2 class="section-title" id="limits-title">What you should not expect yet</h2>
+          <ul>
+            <li>Full Annex III coverage (v1 prioritises recruitment, employment, credit, biometrics, law-enforcement risk scoring, plus a few adjacent cases)</li>
+            <li>Enterprise gloss, customer logos, or published prices</li>
+            <li>Hosted multi-tenant SaaS — early access only via GitHub Discussions</li>
+            <li>NIST / ISO mappings, dashboards, or evidence packs</li>
+          </ul>
+          <p class="disclaimer">
+            This classification is an advisory tool based on a versioned ruleset. It is
+            not legal advice and is not a substitute for qualified counsel or a formal
+            conformity assessment.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-grid">
+        <div>
+          <p class="footer-brand">RiskLine</p>
+          <p>New World Coder · Apache 2.0 · v0.1.0-alpha</p>
+        </div>
+        <ul class="footer-links">
+          <li>
+            <a href="https://github.com/new-world-coder/riskline" rel="noopener">GitHub</a>
+          </li>
+          <li><a href="one-pager.html">One-pager</a></li>
+          <li>
+            <a
+              href="https://github.com/new-world-coder/riskline/blob/main/docs/blog/01-how-we-classify-ai-systems-under-the-eu-ai-act.md"
+              rel="noopener"
+              >Methodology</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://github.com/new-world-coder/riskline/issues/new?template=misclassification_report.md"
+              rel="noopener"
+              >Report misclassification</a
+            >
+          </li>
+        </ul>
+      </div>
+    </footer>
+
+    <script src="js/terminal-demo.js" defer></script>
+  </body>
+</html>
