@@ -60,6 +60,7 @@ func main() {
 }
 
 func loadRequest(path string) (schema.ClassifyRequest, error) {
+	// #nosec G304 -- CLI intentionally reads a user-provided local file path.
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return schema.ClassifyRequest{}, err
