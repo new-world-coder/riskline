@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/new-world-coder/riskline/pkg/schema"
@@ -239,7 +240,10 @@ func TestGoldenRecruitment(t *testing.T) {
 		}
 		t.Fatal(err)
 	}
-	if string(got) != string(want) {
+	// Normalize line endings so golden tests pass on Windows checkouts.
+	gotNorm := strings.ReplaceAll(string(got), "\r\n", "\n")
+	wantNorm := strings.ReplaceAll(string(want), "\r\n", "\n")
+	if gotNorm != wantNorm {
 		t.Fatalf("golden mismatch for %s\n got:\n%s\nwant:\n%s", path, got, want)
 	}
 }
