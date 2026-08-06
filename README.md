@@ -8,6 +8,8 @@
 
 Open-source EU AI Act risk classification — CLI and API, deterministic and auditable, not an LLM guessing.
 
+**Website:** [new-world-coder.github.io/riskline](https://new-world-coder.github.io/riskline/) · **One-pager:** [printable overview](https://new-world-coder.github.io/riskline/one-pager.html) · **Demo cast:** [`demo/`](demo/)
+
 **Status:** Pre-1.0. APIs and the ruleset may change. Feedback via [Issues](https://github.com/new-world-coder/riskline/issues) is welcome — especially [misclassification reports](https://github.com/new-world-coder/riskline/issues/new?template=misclassification_report.md).
 
 You describe an AI system (purpose, data types, deployment context, autonomy, who it affects). You get back a risk tier — prohibited, high-risk, limited-risk, or minimal-risk — with clause references, a plain-language rationale, and recommended controls. The ruleset is versioned JSON, not a model making something up.
@@ -60,7 +62,7 @@ Early access for a hosted endpoint: open a thread in [GitHub Discussions](https:
 - [An open JSON schema for AI system risk classification](docs/blog/02-open-json-schema-for-ai-system-risk-classification.md)
 - [Why I built the compliance engine in Go](docs/blog/03-why-go-for-a-compliance-engine.md)
 
-See also [ROADMAP.md](ROADMAP.md) and ready-to-post copy in [`content/social/LAUNCH_COPY.md`](content/social/LAUNCH_COPY.md).
+See also [ROADMAP.md](ROADMAP.md), the [marketing site](https://new-world-coder.github.io/riskline/), [one-pager](https://new-world-coder.github.io/riskline/one-pager.html), demo assets in [`demo/`](demo/), and ready-to-post copy in [`content/social/LAUNCH_COPY.md`](content/social/LAUNCH_COPY.md).
 
 ## Disclaimer
 
