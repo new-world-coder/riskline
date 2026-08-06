@@ -27,8 +27,8 @@ jobs:
       - name: Engine/ruleset coverage gate
         if: runner.os != 'Windows'
         run: |
-          eng=$(go test ./pkg/engine -cover | awk '/coverage:/{gsub("%","",$NF); print $NF}')
-          rs=$(go test ./pkg/ruleset -cover | awk '/coverage:/{gsub("%","",$NF); print $NF}')
+          eng=$(go test ./pkg/engine -cover | sed -nE 's/.*coverage: ([0-9.]+)%.*/\1/p')
+          rs=$(go test ./pkg/ruleset -cover | sed -nE 's/.*coverage: ([0-9.]+)%.*/\1/p')
           echo "engine=$eng ruleset=$rs"
           awk -v e="$eng" -v r="$rs" 'BEGIN{exit !((e+0)>=85 && (r+0)>=85)}'
 
