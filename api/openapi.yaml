@@ -2,9 +2,12 @@ openapi: 3.0.3
 info:
   title: riskline API
   description: |
-    Open-source EU AI Act risk classification — CLI and API, deterministic and auditable,
+    Open-source AI risk classification — CLI and API, deterministic and auditable,
     not an LLM guessing. Advisory tool only; not legal advice.
-  version: 0.1.0
+
+    P0 ships the eu-ai-act regime pack. Request regimes[] to select packs;
+    geographic_scope is not a regime selector and must not be overloaded.
+  version: 0.2.0-alpha
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -20,10 +23,13 @@ paths:
   /v1/classify:
     post:
       operationId: classifySystem
-      summary: Classify an AI system under the EU AI Act
+      summary: Classify an AI system under selected regime packs
       description: |
         Accepts a structured description of an AI system and returns a risk tier,
         clause references, plain-language rationale, and recommended controls.
+        When regimes is omitted, the server default applies (typically eu-ai-act).
+        Top-level fields always reflect the first resolved regime for backward
+        compatibility; classifications[] appears when multiple regimes are evaluated.
       tags:
         - Classification
       requestBody:
@@ -115,6 +121,18 @@ components:
         geographic_scope:
           $ref: '#/components/schemas/GeographicScope'
           default: eu
+          description: |
+            Hint about where the system is placed on the market / who it affects.
+            Not a regime pack selector — use regimes[] for that.
+        regimes:
+          type: array
+          description: |
+            Regime pack IDs to evaluate (e.g. eu-ai-act). Empty/omitted uses the
+            server or CLI default. Unknown IDs are rejected. P0 ships eu-ai-act only.
+          items:
+            type: string
+            example: eu-ai-act
+          uniqueItems: true
         uses_biometric_categorisation:
           type: boolean
           default: false
@@ -242,6 +260,66 @@ components:
             This classification is an advisory tool based on a versioned ruleset.
             It is not legal advice and is not a substitute for qualified counsel
             or a formal conformity assessment.
+        regime:
+          type: string
+          description: |
+            Pack that produced the top-level fields. Omitted on the historical
+            single-pack eu-ai-act default response for backward compatibility.
+          example: eu-ai-act
+        classifications:
+          type: array
+          description: |
+            Per-regime outcomes. Present only when more than one regime was
+            evaluated. Other jurisdictions must not be collapsed into EU tiers
+            at the top level — inspect character and regime-specific fields here
+            as packs beyond eu-ai-act ship.
+          items:
+            $ref: '#/components/schemas/RegimeClassification'
+
+    RegimeClassification:
+      type: object
+      required:
+        - regime
+        - character
+        - risk_tier
+        - ruleset_version
+        - last_updated
+        - matched_rules
+        - rationale
+        - recommended_controls
+      properties:
+        regime:
+          type: string
+          example: eu-ai-act
+        character:
+          type: string
+          description: Legal character of this pack's outcomes
+          enum:
+            - hard_law
+            - principles
+            - guidance
+            - mapping
+        risk_tier:
+          $ref: '#/components/schemas/RiskTier'
+        ruleset_version:
+          type: string
+        last_updated:
+          type: string
+          format: date
+        matched_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchedRule'
+        rationale:
+          type: string
+        recommended_controls:
+          type: array
+          items:
+            type: string
+        judgment_calls:
+          type: array
+          items:
+            type: string
 
     MatchedRule:
       type: object

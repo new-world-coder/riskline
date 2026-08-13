@@ -9,26 +9,39 @@ import (
 	"time"
 
 	"github.com/new-world-coder/riskline/internal/httpserver"
+	"github.com/new-world-coder/riskline/pkg/config"
 	"github.com/new-world-coder/riskline/pkg/engine"
+	"github.com/new-world-coder/riskline/pkg/ruleset"
 )
 
 func main() {
 	addr := flag.String("addr", ":8080", "listen address")
+	regimesFlag := flag.String("regimes", "", "comma-separated default regime packs (overridable per request)")
 	flag.Parse()
 
-	eng, err := engine.Default()
+	loader, err := ruleset.DefaultLoader()
+	if err != nil {
+		log.Fatalf("loader: %v", err)
+	}
+
+	regs, err := config.ResolveRegimes(config.ParseRegimesFlag(*regimesFlag), ".")
+	if err != nil {
+		log.Fatalf("config: %v", err)
+	}
+
+	eng, err := engine.NewWithLoader(loader, regs)
 	if err != nil {
 		log.Fatalf("engine: %v", err)
 	}
 
 	srv := httpserver.New(eng)
-	log.Printf("riskline-api listening on %s (POST /v1/classify)", *addr)
-	server := &http.Server{
+	httpSrv := &http.Server{
 		Addr:              *addr,
 		Handler:           srv.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-	if err := server.ListenAndServe(); err != nil {
+	log.Printf("riskline-api listening on %s regimes=%v (POST /v1/classify)", *addr, regs)
+	if err := httpSrv.ListenAndServe(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

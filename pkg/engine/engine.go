@@ -8,25 +8,53 @@ import (
 	"github.com/new-world-coder/riskline/pkg/schema"
 )
 
-// Engine evaluates a ClassifyRequest against a loaded ruleset.
+// Engine evaluates a ClassifyRequest against one or more regime packs.
 type Engine struct {
+	loader         *ruleset.Loader
+	defaultRegimes []string
+	// set is retained for New(set) single-pack callers (tests / embedders).
 	set *ruleset.Set
 }
 
+// New builds a single-pack engine (EU AI Act when set comes from LoadDefault).
 func New(set *ruleset.Set) *Engine {
-	return &Engine{set: set}
+	return &Engine{set: set, defaultRegimes: []string{ruleset.RegimeEUAIAct}}
 }
 
-// Default builds an engine with the embedded EU AI Act ruleset.
+// NewWithLoader builds a multi-pack engine. defaultRegimes is used when the
+// request omits regimes (after CLI/API config resolution callers may still
+// pass them on the request).
+func NewWithLoader(loader *ruleset.Loader, defaultRegimes []string) (*Engine, error) {
+	if loader == nil {
+		return nil, fmt.Errorf("engine: nil loader")
+	}
+	regs := ruleset.NormalizeRegimes(defaultRegimes)
+	if len(regs) == 0 {
+		regs = []string{ruleset.RegimeEUAIAct}
+	}
+	for _, r := range regs {
+		if _, err := loader.Load(r); err != nil {
+			return nil, err
+		}
+	}
+	return &Engine{loader: loader, defaultRegimes: regs}, nil
+}
+
+// Default builds an engine with the embedded EU AI Act ruleset only.
 func Default() (*Engine, error) {
-	set, err := ruleset.LoadDefault()
+	loader, err := ruleset.DefaultLoader()
 	if err != nil {
 		return nil, err
 	}
-	return New(set), nil
+	return NewWithLoader(loader, []string{ruleset.RegimeEUAIAct})
 }
 
-// Classify runs rule matching and returns the highest applicable risk tier.
+// Classify runs rule matching for the resolved regimes.
+//
+// Backward compatible shape: the top-level risk_tier / matched_rules fields
+// always reflect the first resolved regime. classifications[] is only filled
+// when more than one regime was evaluated, so the historical EU-only JSON
+// golden remains byte-identical.
 func (e *Engine) Classify(req schema.ClassifyRequest) (schema.ClassifyResponse, error) {
 	if err := validate(req); err != nil {
 		return schema.ClassifyResponse{}, err
@@ -35,12 +63,91 @@ func (e *Engine) Classify(req schema.ClassifyRequest) (schema.ClassifyResponse, 
 		req.GeographicScope = schema.GeoEU
 	}
 
+	regimes, err := e.resolveRegimes(req.Regimes)
+	if err != nil {
+		return schema.ClassifyResponse{}, err
+	}
+
+	results := make([]schema.RegimeClassification, 0, len(regimes))
+	for _, regime := range regimes {
+		pack, set, character, err := e.packFor(regime)
+		if err != nil {
+			return schema.ClassifyResponse{}, err
+		}
+		_ = pack
+		rc := classifyAgainst(set, character, regime, req)
+		results = append(results, rc)
+	}
+
+	primary := results[0]
+	resp := schema.ClassifyResponse{
+		Name:                req.Name,
+		RiskTier:            primary.RiskTier,
+		RulesetVersion:      primary.RulesetVersion,
+		LastUpdated:         primary.LastUpdated,
+		MatchedRules:        primary.MatchedRules,
+		Rationale:           primary.Rationale,
+		RecommendedControls: primary.RecommendedControls,
+		JudgmentCalls:       primary.JudgmentCalls,
+		Disclaimer:          schema.Disclaimer,
+	}
+
+	// Keep single default EU responses free of additive fields so
+	// testdata/golden/recruitment_high_risk.json stays stable.
+	if !isSingleDefaultEU(regimes) {
+		resp.Regime = primary.Regime
+		resp.Classifications = results
+	}
+
+	return resp, nil
+}
+
+func (e *Engine) resolveRegimes(requested []string) ([]string, error) {
+	regs := ruleset.NormalizeRegimes(requested)
+	if len(regs) == 0 {
+		regs = append([]string(nil), e.defaultRegimes...)
+	}
+	if len(regs) == 0 {
+		regs = []string{ruleset.RegimeEUAIAct}
+	}
+	for _, r := range regs {
+		if _, _, _, err := e.packFor(r); err != nil {
+			return nil, &ValidationError{Details: []string{err.Error()}}
+		}
+	}
+	return regs, nil
+}
+
+func (e *Engine) packFor(regime string) (*ruleset.Pack, *ruleset.Set, string, error) {
+	if e.loader != nil {
+		p, err := e.loader.Load(regime)
+		if err != nil {
+			return nil, nil, "", err
+		}
+		return p, p.Set, p.Character, nil
+	}
+	// Legacy New(set) path: only eu-ai-act is available.
+	id := ruleset.NormalizeRegime(regime)
+	if id != ruleset.RegimeEUAIAct {
+		return nil, nil, "", fmt.Errorf("ruleset: unknown regime %q (available: %s)", id, ruleset.RegimeEUAIAct)
+	}
+	if e.set == nil {
+		return nil, nil, "", fmt.Errorf("engine: no ruleset loaded")
+	}
+	return &ruleset.Pack{ID: id, Character: ruleset.CharacterHardLaw, Set: e.set}, e.set, ruleset.CharacterHardLaw, nil
+}
+
+func isSingleDefaultEU(regimes []string) bool {
+	return len(regimes) == 1 && regimes[0] == ruleset.RegimeEUAIAct
+}
+
+func classifyAgainst(set *ruleset.Set, character, regime string, req schema.ClassifyRequest) schema.RegimeClassification {
 	var matched []schema.MatchedRule
 	var controls []string
 	var judgments []string
 	seenControl := map[string]bool{}
 
-	for _, rule := range e.set.Rules {
+	for _, rule := range set.Rules {
 		if !matches(rule, req) {
 			continue
 		}
@@ -49,8 +156,8 @@ func (e *Engine) Classify(req schema.ClassifyRequest) (schema.ClassifyResponse, 
 			Tier:           schema.RiskTier(rule.Tier),
 			ArticleOrAnnex: rule.ArticleOrAnnex,
 			Summary:        rule.Summary,
-			RulesetVersion: e.set.Version,
-			LastUpdated:    e.set.LastUpdated,
+			RulesetVersion: set.Version,
+			LastUpdated:    set.LastUpdated,
 		})
 		for _, c := range rule.RecommendedControls {
 			if !seenControl[c] {
@@ -73,17 +180,17 @@ func (e *Engine) Classify(req schema.ClassifyRequest) (schema.ClassifyResponse, 
 		}
 	}
 
-	return schema.ClassifyResponse{
-		Name:                req.Name,
+	return schema.RegimeClassification{
+		Regime:              regime,
+		Character:           character,
 		RiskTier:            tier,
-		RulesetVersion:      e.set.Version,
-		LastUpdated:         e.set.LastUpdated,
+		RulesetVersion:      set.Version,
+		LastUpdated:         set.LastUpdated,
 		MatchedRules:        matched,
 		Rationale:           buildRationale(tier, matched),
 		RecommendedControls: controls,
 		JudgmentCalls:       judgments,
-		Disclaimer:          schema.Disclaimer,
-	}, nil
+	}
 }
 
 func validate(req schema.ClassifyRequest) error {

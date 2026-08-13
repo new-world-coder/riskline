@@ -12,6 +12,20 @@ export interface ClassifyRequest {
   autonomy_level: string;
   affected_population: string;
   geographic_scope?: string;
+  /** Regime pack IDs (e.g. eu-ai-act). Not the same as geographic_scope. */
+  regimes?: string[];
+}
+
+export interface RegimeClassification {
+  regime: string;
+  character: string;
+  risk_tier: RiskTier;
+  ruleset_version: string;
+  last_updated: string;
+  matched_rules: unknown[];
+  rationale: string;
+  recommended_controls: string[];
+  judgment_calls?: string[];
 }
 
 export interface ClassifyResponse {
@@ -22,6 +36,8 @@ export interface ClassifyResponse {
   rationale: string;
   matched_rules: unknown[];
   recommended_controls: string[];
+  regime?: string;
+  classifications?: RegimeClassification[];
 }
 
 export async function classifySystem(

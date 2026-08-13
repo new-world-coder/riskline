@@ -66,6 +66,7 @@ jobs:
       - name: Start API and smoke against OpenAPI paths
         run: |
           go build -o bin/riskline-api ./cmd/riskline-api
+          go build -o bin/riskline-cli ./cmd/riskline-cli
           ./bin/riskline-api -addr 127.0.0.1:18080 &
           pid=$!
           trap 'kill $pid' EXIT
@@ -78,5 +79,13 @@ jobs:
             -d @examples/curl/hiring-assist.json | tee /tmp/out.json
           grep -q '"risk_tier"' /tmp/out.json
           grep -q '"disclaimer"' /tmp/out.json
+          grep -q 'eu-ai-act-2024-v0.1.0' /tmp/out.json
+          # Unknown regimes must be rejected (P0 ships eu-ai-act only).
+          code=$(curl -s -o /tmp/bad.json -w '%{http_code}' http://127.0.0.1:18080/v1/classify \
+            -H 'content-type: application/json' \
+            -d '{"purpose":"x","data_types":["other"],"deployment_context":"other","autonomy_level":"content_generation","affected_population":"other","regimes":["mas-feat"]}')
+          test "$code" = "400"
           grep -q 'openapi:' api/openapi.yaml
+          grep -q '0.2.0-alpha' api/openapi.yaml
+          ./bin/riskline-cli -list-regimes | grep -qx 'eu-ai-act'
           # TODO: swap for a full schemathesis/dredd run once clients are generated in CI
