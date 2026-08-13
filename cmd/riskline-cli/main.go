@@ -8,19 +8,37 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/new-world-coder/riskline/pkg/config"
 	"github.com/new-world-coder/riskline/pkg/engine"
+	"github.com/new-world-coder/riskline/pkg/ruleset"
 	"github.com/new-world-coder/riskline/pkg/schema"
 	"gopkg.in/yaml.v3"
 )
 
 func main() {
 	jsonOut := flag.Bool("json", false, "emit machine-readable JSON")
+	regimesFlag := flag.String("regimes", "", "comma-separated regime packs (default: request, RISKLINE_REGIMES, .riskline.yaml, or eu-ai-act)")
+	listRegimes := flag.Bool("list-regimes", false, "print shipped regime pack IDs and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [flags] <system-description.yaml|json>\n\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Classify an AI system under the EU AI Act. Runs fully offline.\n\n")
+		fmt.Fprintf(os.Stderr, "Classify an AI system against versioned regime packs. Runs fully offline.\n")
+		fmt.Fprintf(os.Stderr, "P0 ships eu-ai-act only; geographic_scope is not a regime selector.\n\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	loader, err := ruleset.DefaultLoader()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "loader: %v\n", err)
+		os.Exit(1)
+	}
+
+	if *listRegimes {
+		for _, id := range loader.List() {
+			fmt.Println(id)
+		}
+		return
+	}
 
 	if flag.NArg() != 1 {
 		flag.Usage()
@@ -34,7 +52,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	eng, err := engine.Default()
+	explicit := config.ParseRegimesFlag(*regimesFlag)
+	if len(explicit) == 0 {
+		explicit = req.Regimes
+	}
+	regs, err := config.ResolveRegimes(explicit, ".")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "config: %v\n", err)
+		os.Exit(1)
+	}
+	req.Regimes = regs
+
+	eng, err := engine.NewWithLoader(loader, regs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "engine: %v\n", err)
 		os.Exit(1)
@@ -60,7 +89,6 @@ func main() {
 }
 
 func loadRequest(path string) (schema.ClassifyRequest, error) {
-	// #nosec G304 -- CLI intentionally reads a user-provided local file path.
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return schema.ClassifyRequest{}, err
@@ -88,6 +116,9 @@ func printHuman(resp schema.ClassifyResponse) {
 	if resp.Name != "" {
 		fmt.Printf("System:           %s\n", resp.Name)
 	}
+	if resp.Regime != "" {
+		fmt.Printf("Primary regime:   %s\n", resp.Regime)
+	}
 	fmt.Printf("Risk tier:        %s\n", resp.RiskTier)
 	fmt.Printf("Ruleset:          %s (%s)\n", resp.RulesetVersion, resp.LastUpdated)
 	fmt.Printf("\nRationale\n%s\n", resp.Rationale)
@@ -100,6 +131,13 @@ func printHuman(resp schema.ClassifyResponse) {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", r.ID, r.Tier, r.ArticleOrAnnex)
 		}
 		_ = w.Flush()
+	}
+
+	if len(resp.Classifications) > 1 {
+		fmt.Println("\nAll regimes")
+		for _, c := range resp.Classifications {
+			fmt.Printf("  - %s (%s): %s [%s]\n", c.Regime, c.Character, c.RiskTier, c.RulesetVersion)
+		}
 	}
 
 	if len(resp.RecommendedControls) > 0 {

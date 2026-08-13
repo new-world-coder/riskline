@@ -67,6 +67,29 @@ func TestClassifyBadJSON(t *testing.T) {
 	}
 }
 
+func TestClassifyUnknownRegime(t *testing.T) {
+	eng, err := engine.Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := New(eng)
+	body := `{
+		"purpose": "toy",
+		"data_types": ["other"],
+		"deployment_context": "other",
+		"autonomy_level": "content_generation",
+		"affected_population": "other",
+		"regimes": ["mas-feat"]
+	}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/classify", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	srv.Handler().ServeHTTP(rr, req)
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+}
+
 func TestHealthz(t *testing.T) {
 	eng, err := engine.Default()
 	if err != nil {

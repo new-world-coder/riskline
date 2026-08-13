@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/new-world-coder/riskline/pkg/ruleset"
 	"github.com/new-world-coder/riskline/pkg/schema"
 )
 
@@ -245,6 +246,77 @@ func TestGoldenRecruitment(t *testing.T) {
 	wantNorm := strings.ReplaceAll(string(want), "\r\n", "\n")
 	if gotNorm != wantNorm {
 		t.Fatalf("golden mismatch for %s\n got:\n%s\nwant:\n%s", path, got, want)
+	}
+}
+
+func TestUnknownRegime(t *testing.T) {
+	eng, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = eng.Classify(schema.ClassifyRequest{
+		Purpose:            "toy",
+		DataTypes:          []schema.DataType{schema.DataOther},
+		DeploymentContext:  schema.DeployOther,
+		AutonomyLevel:      schema.AutonomyContentGeneration,
+		AffectedPopulation: schema.PopOther,
+		Regimes:            []string{"mas-feat"},
+	})
+	if err == nil {
+		t.Fatal("expected validation error for unknown regime")
+	}
+	if _, ok := err.(*ValidationError); !ok {
+		t.Fatalf("want ValidationError, got %T %v", err, err)
+	}
+}
+
+func TestExplicitEUKeepsGoldenShape(t *testing.T) {
+	eng, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := eng.Classify(schema.ClassifyRequest{
+		Name:               "Hiring Assist",
+		Purpose:            "Screen job applicants and rank candidates for interview",
+		DataTypes:          []schema.DataType{schema.DataPersonal, schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+		GeographicScope:    schema.GeoEU,
+		Regimes:            []string{"eu-ai-act"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Regime != "" {
+		t.Fatalf("regime should be omitted on single EU default path, got %q", resp.Regime)
+	}
+	if len(resp.Classifications) != 0 {
+		t.Fatalf("classifications should be omitted on single EU path, got %#v", resp.Classifications)
+	}
+	if resp.RiskTier != schema.TierHighRisk {
+		t.Fatalf("tier = %s", resp.RiskTier)
+	}
+}
+
+func TestLegacyNewStillWorks(t *testing.T) {
+	set, err := ruleset.LoadDefault()
+	if err != nil {
+		t.Fatal(err)
+	}
+	eng := New(set)
+	resp, err := eng.Classify(schema.ClassifyRequest{
+		Purpose:            "Summarise internal engineering design docs",
+		DataTypes:          []schema.DataType{schema.DataSyntheticNonPersonal},
+		DeploymentContext:  schema.DeployInternalOnly,
+		AutonomyLevel:      schema.AutonomyContentGeneration,
+		AffectedPopulation: schema.PopEmployees,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.RiskTier != schema.TierMinimalRisk {
+		t.Fatalf("tier = %s", resp.RiskTier)
 	}
 }
 

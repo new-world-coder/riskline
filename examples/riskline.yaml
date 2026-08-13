@@ -1,0 +1,6 @@
+# Project defaults for riskline CLI and API.
+# Precedence: request regimes[] / -regimes flag > RISKLINE_REGIMES > this file > eu-ai-act
+#
+# geographic_scope on classify requests is NOT a regime selector.
+regimes:
+  - eu-ai-act
