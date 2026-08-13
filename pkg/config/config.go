@@ -42,7 +42,7 @@ func ResolveRegimes(explicit []string, configDir string) ([]string, error) {
 	if !strings.HasSuffix(path, FileName) {
 		path = strings.TrimRight(configDir, "/\\") + string(os.PathSeparator) + FileName
 	}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- project config under configDir/.riskline.yaml only
 	if err == nil {
 		var f File
 		if err := yaml.Unmarshal(data, &f); err != nil {

@@ -89,7 +89,8 @@ func main() {
 }
 
 func loadRequest(path string) (schema.ClassifyRequest, error) {
-	data, err := os.ReadFile(path)
+	// filepath is a user-supplied local system description (CLI argument).
+	data, err := os.ReadFile(path) // #nosec G304 -- intentional offline classify input
 	if err != nil {
 		return schema.ClassifyRequest{}, err
 	}
