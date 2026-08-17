@@ -1,6 +1,6 @@
 # The Conformity Gap: Why AI Risk Classification Without Continuous Verification Fails Post-Market Obligations
 
-**Author:** RiskLine  
+**Author:** Sachin Chitre, RiskLine  
 **Version:** 1.0 (public draft)  
 **Date:** August 2026  
 **Status:** Thought leadership — not legal advice  
@@ -164,7 +164,7 @@ We invite practitioners to engage on the following open questions:
 4. **GRC integration.** What evidence shape do Vanta, Drata, and audit firms need to accept assurance output as first-class audit artefacts?  
 5. **Post-market proportionality.** How should probe cadence scale with risk tier under Article 72?  
 
-Discussion: https://github.com/new-world-coder/riskline/discussions  
+Discussion: https://github.com/new-world-coder/riskline/discussions/19  
 Design partners: https://riskline-cloud-web.vercel.app/pilots  
 
 ---
@@ -195,7 +195,7 @@ RiskLine is an open-core AI governance engine. The classification layer (EU AI A
 
 If referencing this paper:
 
-> RiskLine. (2026). *The Conformity Gap: Why AI Risk Classification Without Continuous Verification Fails Post-Market Obligations* (v1.0). https://github.com/new-world-coder/riskline/blob/main/docs/whitepaper-the-conformity-gap.md
+> Chitre, S. (2026). *The Conformity Gap: Why AI Risk Classification Without Continuous Verification Fails Post-Market Obligations* (v1.0). RiskLine. https://github.com/new-world-coder/riskline/blob/main/docs/whitepaper-the-conformity-gap.md
 
 ---
 
