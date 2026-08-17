@@ -88,7 +88,9 @@ func (e *Engine) Classify(req schema.ClassifyRequest) (schema.ClassifyResponse, 
 		MatchedRules:        primary.MatchedRules,
 		Rationale:           primary.Rationale,
 		RecommendedControls: primary.RecommendedControls,
+		TechnicalControls:   primary.TechnicalControls,
 		JudgmentCalls:       primary.JudgmentCalls,
+		MappingOnly:         primary.MappingOnly,
 		Disclaimer:          schema.Disclaimer,
 	}
 
@@ -144,8 +146,10 @@ func isSingleDefaultEU(regimes []string) bool {
 func classifyAgainst(set *ruleset.Set, character, regime string, req schema.ClassifyRequest) schema.RegimeClassification {
 	var matched []schema.MatchedRule
 	var controls []string
+	var techControls []schema.TechnicalControl
 	var judgments []string
 	seenControl := map[string]bool{}
+	seenTech := map[string]bool{}
 
 	for _, rule := range set.Rules {
 		if !matches(rule, req) {
@@ -165,14 +169,38 @@ func classifyAgainst(set *ruleset.Set, character, regime string, req schema.Clas
 				controls = append(controls, c)
 			}
 		}
+		for _, tc := range rule.TechnicalControls {
+			if tc.ID == "" || seenTech[tc.ID] {
+				continue
+			}
+			seenTech[tc.ID] = true
+			techControls = append(techControls, schema.TechnicalControl{
+				ID:            tc.ID,
+				PaperRef:      tc.PaperRef,
+				Summary:       tc.Summary,
+				TechnicalHook: tc.TechnicalHook,
+				EvidenceType:  tc.EvidenceType,
+			})
+		}
 		if rule.JudgmentCall && rule.JudgmentCallNote != "" {
 			judgments = append(judgments, rule.ID+": "+rule.JudgmentCallNote)
 		}
 	}
 
+	mappingOnly := character == ruleset.CharacterMapping
 	tier := schema.TierMinimalRisk
-	if len(matched) > 0 {
+	rationale := buildRationale(tier, matched)
+
+	if mappingOnly {
+		rationale = buildMappingRationale(matched)
+		if len(controls) == 0 && len(matched) == 0 {
+			controls = []string{
+				"Document intended purpose and re-run mapping when the use case expands",
+			}
+		}
+	} else if len(matched) > 0 {
 		tier = highestTier(matched)
+		rationale = buildRationale(tier, matched)
 	} else {
 		controls = []string{
 			"Document intended purpose and data categories",
@@ -187,9 +215,11 @@ func classifyAgainst(set *ruleset.Set, character, regime string, req schema.Clas
 		RulesetVersion:      set.Version,
 		LastUpdated:         set.LastUpdated,
 		MatchedRules:        matched,
-		Rationale:           buildRationale(tier, matched),
+		Rationale:           rationale,
 		RecommendedControls: controls,
+		TechnicalControls:   techControls,
 		JudgmentCalls:       judgments,
+		MappingOnly:         mappingOnly,
 	}
 }
 
@@ -369,5 +399,23 @@ func buildRationale(tier schema.RiskTier, matched []schema.MatchedRule) string {
 	}
 	b.WriteString(strings.Join(parts, "; "))
 	b.WriteString(".")
+	return b.String()
+}
+
+func buildMappingRationale(matched []schema.MatchedRule) string {
+	if len(matched) == 0 {
+		return "No NIST AI RMF mapping rules matched. This is an advisory mapping only — not a US legal risk tier. Re-run when purpose, population, autonomy, or data types change."
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "NIST AI RMF mapping: %d subcategory mapping(s) matched. Examples: ", len(matched))
+	parts := make([]string, 0, 3)
+	for _, r := range matched {
+		parts = append(parts, r.ArticleOrAnnex+" ("+r.ID+")")
+		if len(parts) >= 3 {
+			break
+		}
+	}
+	b.WriteString(strings.Join(parts, "; "))
+	b.WriteString(". This is advisory mapping only — not a US legal risk tier.")
 	return b.String()
 }

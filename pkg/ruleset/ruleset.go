@@ -9,6 +9,18 @@ import (
 //go:embed data/eu_ai_act_v0.1.0.json
 var euAIActV010 []byte
 
+//go:embed data/nist_ai_rmf_v0.1.0.json
+var nistAIRMFV010 []byte
+
+// TechnicalControl links policy text to an implementable hook and evidence type.
+type TechnicalControl struct {
+	ID            string `json:"id"`
+	PaperRef      string `json:"paper_ref"`
+	Summary       string `json:"summary"`
+	TechnicalHook string `json:"technical_hook"`
+	EvidenceType  string `json:"evidence_type"`
+}
+
 // RuleWhen describes match conditions. Empty slices mean "don't constrain on this field".
 type RuleWhen struct {
 	AnyFlags             []string `json:"any_flags"`
@@ -21,15 +33,16 @@ type RuleWhen struct {
 
 // Rule is one versioned classification mapping.
 type Rule struct {
-	ID                   string   `json:"id"`
-	Tier                 string   `json:"tier"`
-	ArticleOrAnnex       string   `json:"article_or_annex"`
-	Summary              string   `json:"summary"`
-	When                 RuleWhen `json:"when"`
-	Match                string   `json:"match"` // "any_group" (default) or "all_groups"
-	RecommendedControls  []string `json:"recommended_controls"`
-	JudgmentCall         bool     `json:"judgment_call"`
-	JudgmentCallNote     string   `json:"judgment_call_note"`
+	ID                  string             `json:"id"`
+	Tier                string             `json:"tier"`
+	ArticleOrAnnex      string             `json:"article_or_annex"`
+	Summary             string             `json:"summary"`
+	When                RuleWhen           `json:"when"`
+	Match               string             `json:"match"` // "any_group" (default) or "all_groups"
+	RecommendedControls []string           `json:"recommended_controls"`
+	TechnicalControls   []TechnicalControl `json:"technical_controls,omitempty"`
+	JudgmentCall        bool               `json:"judgment_call"`
+	JudgmentCallNote    string             `json:"judgment_call_note"`
 }
 
 // Set is a loaded ruleset document.
@@ -44,6 +57,11 @@ type Set struct {
 // LoadDefault loads the embedded EU AI Act v0.1.0 ruleset.
 func LoadDefault() (*Set, error) {
 	return Parse(euAIActV010)
+}
+
+// LoadNISTAIRMF loads the embedded NIST AI RMF mapping pack v0.1.0.
+func LoadNISTAIRMF() (*Set, error) {
+	return Parse(nistAIRMFV010)
 }
 
 // Parse decodes a ruleset from JSON bytes.

@@ -10,8 +10,8 @@ func TestDefaultLoader(t *testing.T) {
 		t.Fatal(err)
 	}
 	list := l.List()
-	if len(list) != 1 || list[0] != RegimeEUAIAct {
-		t.Fatalf("list = %v", list)
+	if len(list) != 2 {
+		t.Fatalf("list = %v, want eu-ai-act and nist-ai-rmf", list)
 	}
 	p, err := l.Load("EU-AI-Act")
 	if err != nil {
@@ -22,6 +22,16 @@ func TestDefaultLoader(t *testing.T) {
 	}
 	if p.Set.Version != "eu-ai-act-2024-v0.1.0" {
 		t.Fatalf("version = %q", p.Set.Version)
+	}
+	nist, err := l.Load(RegimeNISTAIRMF)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if nist.Character != CharacterMapping {
+		t.Fatalf("nist character = %q", nist.Character)
+	}
+	if nist.Set.Version != "nist-ai-rmf-2023-v0.1.0" {
+		t.Fatalf("nist version = %q", nist.Set.Version)
 	}
 }
 

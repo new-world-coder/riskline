@@ -5,9 +5,9 @@ info:
     Open-source AI risk classification — CLI and API, deterministic and auditable,
     not an LLM guessing. Advisory tool only; not legal advice.
 
-    P0 ships the eu-ai-act regime pack. Request regimes[] to select packs;
-    geographic_scope is not a regime selector and must not be overloaded.
-  version: 0.2.0-alpha
+    P0 ships eu-ai-act (hard law) and nist-ai-rmf (mapping). Request regimes[] to
+    select packs; geographic_scope is not a regime selector and must not be overloaded.
+  version: 0.3.0-alpha
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -127,8 +127,8 @@ components:
         regimes:
           type: array
           description: |
-            Regime pack IDs to evaluate (e.g. eu-ai-act). Empty/omitted uses the
-            server or CLI default. Unknown IDs are rejected. P0 ships eu-ai-act only.
+            Regime pack IDs to evaluate (e.g. eu-ai-act, nist-ai-rmf). Empty/omitted
+            uses the server or CLI default. Unknown IDs are rejected.
           items:
             type: string
             example: eu-ai-act
@@ -206,6 +206,8 @@ components:
       enum:
         - eu
         - eu_and_global
+        - us
+        - us_and_global
         - non_eu
         - unknown
 
@@ -249,6 +251,10 @@ components:
           type: array
           items:
             type: string
+        technical_controls:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechnicalControl'
         judgment_calls:
           type: array
           description: Boundary cases where the ruleset made an explicit judgment call
@@ -266,6 +272,11 @@ components:
             Pack that produced the top-level fields. Omitted on the historical
             single-pack eu-ai-act default response for backward compatibility.
           example: eu-ai-act
+        mapping_only:
+          type: boolean
+          description: |
+            True when the primary regime is a mapping pack (e.g. nist-ai-rmf).
+            risk_tier is not a US legal conclusion — inspect technical_controls.
         classifications:
           type: array
           description: |
@@ -316,10 +327,41 @@ components:
           type: array
           items:
             type: string
+        technical_controls:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechnicalControl'
         judgment_calls:
           type: array
           items:
             type: string
+        mapping_only:
+          type: boolean
+          description: True for mapping packs — risk_tier is not a legal tier.
+
+    TechnicalControl:
+      type: object
+      required:
+        - id
+        - paper_ref
+        - summary
+        - technical_hook
+        - evidence_type
+      properties:
+        id:
+          type: string
+          example: human-review-employment
+        paper_ref:
+          type: string
+          example: "NIST AI RMF Manage 2.3 / CPPA ADMT (significant decision)"
+        summary:
+          type: string
+        technical_hook:
+          type: string
+          example: workflow.human_review_required
+        evidence_type:
+          type: string
+          example: audit_log + signed_classify_json
 
     MatchedRule:
       type: object

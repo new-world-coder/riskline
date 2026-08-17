@@ -16,6 +16,14 @@ export interface ClassifyRequest {
   regimes?: string[];
 }
 
+export interface TechnicalControl {
+  id: string;
+  paper_ref: string;
+  summary: string;
+  technical_hook: string;
+  evidence_type: string;
+}
+
 export interface RegimeClassification {
   regime: string;
   character: string;
@@ -25,7 +33,9 @@ export interface RegimeClassification {
   matched_rules: unknown[];
   rationale: string;
   recommended_controls: string[];
+  technical_controls?: TechnicalControl[];
   judgment_calls?: string[];
+  mapping_only?: boolean;
 }
 
 export interface ClassifyResponse {
@@ -36,7 +46,9 @@ export interface ClassifyResponse {
   rationale: string;
   matched_rules: unknown[];
   recommended_controls: string[];
+  technical_controls?: TechnicalControl[];
   regime?: string;
+  mapping_only?: boolean;
   classifications?: RegimeClassification[];
 }
 

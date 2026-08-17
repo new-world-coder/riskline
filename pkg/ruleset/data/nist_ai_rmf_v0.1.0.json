@@ -1,0 +1,285 @@
+{
+  "version": "nist-ai-rmf-2023-v0.1.0",
+  "last_updated": "2026-08-17",
+  "framework": "NIST AI Risk Management Framework (AI RMF 1.0)",
+  "notes": [
+    "Mapping pack only — does not assign US legal risk tiers. Outputs NIST Govern/Map/Measure/Manage subcategory mappings plus implementable technical controls.",
+    "CPPA ADMT and Colorado AI Act references appear as paper_ref context on employment/credit mappings, not as standalone law classifiers.",
+    "Advisory only — not legal advice."
+  ],
+  "rules": [
+    {
+      "id": "nist-govern-ai-inventory",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Govern 1.2",
+      "summary": "Maintain an inventory of AI systems with owners, purpose, and data categories.",
+      "when": {
+        "autonomy_levels": ["decision_support", "automated_decision", "autonomous_action"]
+      },
+      "recommended_controls": [
+        "Register the system in the organizational AI inventory with a named owner",
+        "Record purpose, data types, deployment context, and autonomy level"
+      ],
+      "technical_controls": [
+        {
+          "id": "ai-inventory-entry",
+          "paper_ref": "NIST AI RMF Govern 1.2",
+          "summary": "Register system metadata in the AI inventory at design time",
+          "technical_hook": "inventory.register_system",
+          "evidence_type": "inventory_record + classify_json"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-map-employment-context",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Map 1.1",
+      "summary": "Map employment-related AI that affects individuals — context, stakeholders, and intended/unintended impacts.",
+      "when": {
+        "affected_populations": ["job_applicants", "employees"],
+        "purpose_keywords": ["screen", "rank", "hire", "applicant", "candidate", "interview", "recruit", "employment", "performance", "monitor"]
+      },
+      "recommended_controls": [
+        "Document stakeholders and foreseeable harms for employment decisions",
+        "Map data flows from application through model output to human decision"
+      ],
+      "technical_controls": [
+        {
+          "id": "employment-context-map",
+          "paper_ref": "NIST AI RMF Map 1.1 / CPPA ADMT (significant decision — hiring)",
+          "summary": "Document employment AI context and impact pathways before deployment",
+          "technical_hook": "docs.system_card + map.stakeholder_impact",
+          "evidence_type": "system_card_markdown"
+        }
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "CPPA ADMT significant-decision obligations apply when California consumers are affected; this mapping flags the pattern for review — it is not a CCPA compliance determination."
+    },
+    {
+      "id": "nist-measure-employment-bias",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Measure 2.6",
+      "summary": "Measure fairness and performance for employment decision-support systems before production use.",
+      "when": {
+        "affected_populations": ["job_applicants", "employees"],
+        "autonomy_levels": ["decision_support", "automated_decision"]
+      },
+      "recommended_controls": [
+        "Define fairness metrics appropriate to the hiring workflow",
+        "Run pre-deployment evaluation on representative datasets"
+      ],
+      "technical_controls": [
+        {
+          "id": "employment-fairness-eval",
+          "paper_ref": "NIST AI RMF Measure 2.6 / EEOC technical assistance (employment AI)",
+          "summary": "Run documented fairness/performance evaluation before production",
+          "technical_hook": "ci.model_eval + report.fairness_metrics",
+          "evidence_type": "eval_report_json"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-manage-human-review-employment",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Manage 2.3",
+      "summary": "Human review before adverse employment actions when AI supports or automates decisions.",
+      "when": {
+        "affected_populations": ["job_applicants", "employees"],
+        "autonomy_levels": ["decision_support", "automated_decision"]
+      },
+      "match": "all_groups",
+      "recommended_controls": [
+        "Require human review before rejecting or ranking down applicants",
+        "Log reviewer identity and override rationale"
+      ],
+      "technical_controls": [
+        {
+          "id": "human-review-employment",
+          "paper_ref": "NIST AI RMF Manage 2.3 / CPPA ADMT (significant decision)",
+          "summary": "Gate adverse employment outcomes on human review",
+          "technical_hook": "workflow.human_review_required",
+          "evidence_type": "audit_log + signed_classify_json"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-map-credit-context",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Map 1.1",
+      "summary": "Map creditworthiness AI — consumers affected, data sources, and decision pathways.",
+      "when": {
+        "affected_populations": ["credit_consumers"],
+        "data_types": ["financial_credit_data"],
+        "purpose_keywords": ["credit", "creditworthiness", "score", "lending", "loan"]
+      },
+      "recommended_controls": [
+        "Document credit decision logic and adverse-action notice workflow",
+        "Map third-party data sources and model inputs"
+      ],
+      "technical_controls": [
+        {
+          "id": "credit-context-map",
+          "paper_ref": "NIST AI RMF Map 1.1 / Colorado AI Act (high-risk pattern — employment/credit)",
+          "summary": "Document credit AI context and adverse-action pathway",
+          "technical_hook": "docs.system_card + map.adverse_action_workflow",
+          "evidence_type": "system_card_markdown"
+        }
+      ],
+      "judgment_call": true,
+      "judgment_call_note": "Colorado AI Act high-risk patterns may apply to credit decisions; seek counsel for scope — this is a mapping flag only."
+    },
+    {
+      "id": "nist-measure-credit-accuracy",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Measure 2.5",
+      "summary": "Measure accuracy and robustness of credit scoring models.",
+      "when": {
+        "affected_populations": ["credit_consumers"],
+        "autonomy_levels": ["automated_decision", "decision_support"]
+      },
+      "recommended_controls": [
+        "Validate model accuracy against holdout data",
+        "Monitor drift on credit outcomes in production"
+      ],
+      "technical_controls": [
+        {
+          "id": "credit-model-validation",
+          "paper_ref": "NIST AI RMF Measure 2.5",
+          "summary": "Run validation and ongoing monitoring for credit models",
+          "technical_hook": "ci.model_eval + monitor.drift_alert",
+          "evidence_type": "eval_report_json + monitor_dashboard"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-manage-customer-transparency",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Manage 1.3",
+      "summary": "Disclose AI use to customers in interactive systems.",
+      "when": {
+        "affected_populations": ["customers", "general_public"],
+        "autonomy_levels": ["content_generation", "decision_support"],
+        "purpose_keywords": ["chatbot", "support", "assistant", "customer"]
+      },
+      "recommended_controls": [
+        "Disclose that the user is interacting with an AI system",
+        "Provide escalation path to a human agent"
+      ],
+      "technical_controls": [
+        {
+          "id": "customer-ai-disclosure",
+          "paper_ref": "NIST AI RMF Manage 1.3",
+          "summary": "Show AI disclosure in customer-facing UI",
+          "technical_hook": "ui.ai_disclosure_banner",
+          "evidence_type": "screenshot + ui_test"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-govern-agentic-scope",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Govern 1.5",
+      "summary": "Define allowed actions and boundaries for agentic or autonomous AI systems.",
+      "when": {
+        "autonomy_levels": ["autonomous_action"]
+      },
+      "recommended_controls": [
+        "Document permitted tools, data scopes, and action envelopes",
+        "Require human approval for irreversible or high-impact actions"
+      ],
+      "technical_controls": [
+        {
+          "id": "agentic-action-envelope",
+          "paper_ref": "NIST AI RMF Govern 1.5 / Singapore MGF Agentic AI (action scope)",
+          "summary": "Enforce allowed-action envelope for autonomous agents",
+          "technical_hook": "policy.agent_action_allowlist",
+          "evidence_type": "policy_config + action_audit_log"
+        },
+        {
+          "id": "agentic-human-override",
+          "paper_ref": "NIST AI RMF Manage 2.4",
+          "summary": "Human override and kill-switch for autonomous actions",
+          "technical_hook": "workflow.human_override + agent.kill_switch",
+          "evidence_type": "override_audit_log"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-measure-agentic-reliability",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Measure 2.11",
+      "summary": "Test agentic systems for erroneous and unauthorized actions before deployment.",
+      "when": {
+        "autonomy_levels": ["autonomous_action"]
+      },
+      "recommended_controls": [
+        "Red-team agent workflows for out-of-scope actions",
+        "Log and alert on unauthorized tool or data access attempts"
+      ],
+      "technical_controls": [
+        {
+          "id": "agentic-red-team",
+          "paper_ref": "NIST AI RMF Measure 2.11",
+          "summary": "Run agentic red-team scenarios in CI before release",
+          "technical_hook": "ci.agent_red_team",
+          "evidence_type": "red_team_report_json"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-map-internal-low-impact",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Map 1.0",
+      "summary": "Lightweight context mapping for internal, low-impact productivity AI.",
+      "when": {
+        "deployment_contexts": ["internal_only"],
+        "affected_populations": ["employees"],
+        "autonomy_levels": ["content_generation"]
+      },
+      "recommended_controls": [
+        "Document internal purpose and data handling",
+        "Re-classify if the tool processes personal data or faces external users"
+      ],
+      "technical_controls": [
+        {
+          "id": "internal-system-card",
+          "paper_ref": "NIST AI RMF Map 1.0",
+          "summary": "Minimal internal system card with purpose and data scope",
+          "technical_hook": "docs.internal_system_card",
+          "evidence_type": "system_card_markdown"
+        }
+      ],
+      "judgment_call": false
+    },
+    {
+      "id": "nist-measure-continuous-classify",
+      "tier": "minimal_risk",
+      "article_or_annex": "NIST AI RMF Measure 2.1",
+      "summary": "Re-evaluate AI system risk classification when purpose, data, or autonomy changes.",
+      "when": {
+        "autonomy_levels": ["decision_support", "automated_decision", "autonomous_action", "content_generation"]
+      },
+      "recommended_controls": [
+        "Re-run classification on material system description changes",
+        "Pin ruleset version in CI for reproducible evidence"
+      ],
+      "technical_controls": [
+        {
+          "id": "ci-classify-on-change",
+          "paper_ref": "NIST AI RMF Measure 2.1",
+          "summary": "Classify AI system metadata in CI when description files change",
+          "technical_hook": "ci.classify_on_pr",
+          "evidence_type": "signed_classify_json"
+        }
+      ],
+      "judgment_call": false
+    }
+  ]
+}

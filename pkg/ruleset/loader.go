@@ -10,7 +10,8 @@ import (
 // (e.g. eu-ai-act → eu-ai-act-2024-v0.1.0) so releases can bump pack content
 // without renaming the regime selector.
 const (
-	RegimeEUAIAct = "eu-ai-act"
+	RegimeEUAIAct   = "eu-ai-act"
+	RegimeNISTAIRMF = "nist-ai-rmf"
 )
 
 // Character describes the legal nature of a regime pack's outcomes.
@@ -34,20 +35,33 @@ type Loader struct {
 }
 
 // DefaultLoader returns a loader with every shipped pack registered.
-// P0 ships eu-ai-act only; additional regimes are additive later.
 func DefaultLoader() (*Loader, error) {
 	l := &Loader{packs: make(map[string]*Pack)}
-	set, err := LoadDefault()
+
+	euSet, err := LoadDefault()
 	if err != nil {
 		return nil, err
 	}
 	if err := l.Register(&Pack{
 		ID:        RegimeEUAIAct,
 		Character: CharacterHardLaw,
-		Set:       set,
+		Set:       euSet,
 	}); err != nil {
 		return nil, err
 	}
+
+	nistSet, err := LoadNISTAIRMF()
+	if err != nil {
+		return nil, err
+	}
+	if err := l.Register(&Pack{
+		ID:        RegimeNISTAIRMF,
+		Character: CharacterMapping,
+		Set:       nistSet,
+	}); err != nil {
+		return nil, err
+	}
+
 	return l, nil
 }
 

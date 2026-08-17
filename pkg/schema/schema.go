@@ -63,6 +63,8 @@ type GeographicScope string
 const (
 	GeoEU          GeographicScope = "eu"
 	GeoEUAndGlobal GeographicScope = "eu_and_global"
+	GeoUS          GeographicScope = "us"
+	GeoUSAndGlobal GeographicScope = "us_and_global"
 	GeoNonEU       GeographicScope = "non_eu"
 	GeoUnknown     GeographicScope = "unknown"
 )
@@ -106,18 +108,32 @@ type MatchedRule struct {
 	LastUpdated     string   `json:"last_updated"`
 }
 
+// TechnicalControl links a paper/policy obligation to an implementable hook
+// and the evidence artifact an auditor can re-run.
+type TechnicalControl struct {
+	ID             string `json:"id"`
+	PaperRef       string `json:"paper_ref"`
+	Summary        string `json:"summary"`
+	TechnicalHook  string `json:"technical_hook"`
+	EvidenceType   string `json:"evidence_type"`
+}
+
 // RegimeClassification is one pack's outcome. Kept separate from EU-shaped
 // top-level fields so other jurisdictions are not forced into risk_tier enums.
 type RegimeClassification struct {
-	Regime              string        `json:"regime"`
-	Character           string        `json:"character"`
-	RiskTier            RiskTier      `json:"risk_tier"`
-	RulesetVersion      string        `json:"ruleset_version"`
-	LastUpdated         string        `json:"last_updated"`
-	MatchedRules        []MatchedRule `json:"matched_rules"`
-	Rationale           string        `json:"rationale"`
-	RecommendedControls []string      `json:"recommended_controls"`
-	JudgmentCalls       []string      `json:"judgment_calls,omitempty"`
+	Regime              string             `json:"regime"`
+	Character           string             `json:"character"`
+	RiskTier            RiskTier           `json:"risk_tier"`
+	RulesetVersion      string             `json:"ruleset_version"`
+	LastUpdated         string             `json:"last_updated"`
+	MatchedRules        []MatchedRule      `json:"matched_rules"`
+	Rationale           string             `json:"rationale"`
+	RecommendedControls []string           `json:"recommended_controls"`
+	TechnicalControls   []TechnicalControl `json:"technical_controls,omitempty"`
+	JudgmentCalls       []string           `json:"judgment_calls,omitempty"`
+	// MappingOnly is true for mapping packs (e.g. nist-ai-rmf). risk_tier is
+	// not a US legal conclusion — inspect matched_rules and technical_controls.
+	MappingOnly bool `json:"mapping_only,omitempty"`
 }
 
 type ClassifyResponse struct {
@@ -127,9 +143,12 @@ type ClassifyResponse struct {
 	LastUpdated         string        `json:"last_updated"`
 	MatchedRules        []MatchedRule `json:"matched_rules"`
 	Rationale           string        `json:"rationale"`
-	RecommendedControls []string      `json:"recommended_controls"`
-	JudgmentCalls       []string      `json:"judgment_calls,omitempty"`
-	Disclaimer          string        `json:"disclaimer"`
+	RecommendedControls []string           `json:"recommended_controls"`
+	TechnicalControls   []TechnicalControl `json:"technical_controls,omitempty"`
+	JudgmentCalls       []string           `json:"judgment_calls,omitempty"`
+	Disclaimer          string             `json:"disclaimer"`
+	// MappingOnly mirrors the primary regime when it is a mapping pack.
+	MappingOnly bool `json:"mapping_only,omitempty"`
 	// Regime identifies which pack produced the top-level EU-compatible fields.
 	// Omitted on the historical single-pack default path so golden JSON stays stable.
 	Regime string `json:"regime,omitempty"`

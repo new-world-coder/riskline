@@ -320,6 +320,77 @@ func TestLegacyNewStillWorks(t *testing.T) {
 	}
 }
 
+func TestNISTMappingHiring(t *testing.T) {
+	eng, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := eng.Classify(schema.ClassifyRequest{
+		Name:               "Hiring Assist",
+		Purpose:            "Screen job applicants and rank candidates for interview",
+		DataTypes:          []schema.DataType{schema.DataPersonal, schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+		GeographicScope:    schema.GeoUS,
+		Regimes:            []string{ruleset.RegimeNISTAIRMF},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resp.MappingOnly {
+		t.Fatal("expected mapping_only on nist-only response")
+	}
+	if len(resp.TechnicalControls) == 0 {
+		t.Fatal("expected technical_controls for hiring nist mapping")
+	}
+	if !hasRule(resp, "nist-map-employment-context") {
+		t.Fatalf("expected employment map rule, got %v", ruleIDs(resp))
+	}
+}
+
+func TestDualRegimeHiringEUAndNIST(t *testing.T) {
+	eng, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := eng.Classify(schema.ClassifyRequest{
+		Name:               "Hiring Assist",
+		Purpose:            "Screen job applicants and rank candidates for interview",
+		DataTypes:          []schema.DataType{schema.DataPersonal, schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+		GeographicScope:    schema.GeoUS,
+		Regimes:            []string{ruleset.RegimeEUAIAct, ruleset.RegimeNISTAIRMF},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.RiskTier != schema.TierHighRisk {
+		t.Fatalf("primary tier = %s", resp.RiskTier)
+	}
+	if resp.MappingOnly {
+		t.Fatal("primary should be EU hard law, not mapping_only")
+	}
+	if len(resp.Classifications) != 2 {
+		t.Fatalf("classifications = %d, want 2", len(resp.Classifications))
+	}
+	var nist *schema.RegimeClassification
+	for i := range resp.Classifications {
+		if resp.Classifications[i].Regime == ruleset.RegimeNISTAIRMF {
+			nist = &resp.Classifications[i]
+			break
+		}
+	}
+	if nist == nil || !nist.MappingOnly {
+		t.Fatal("expected nist classification with mapping_only")
+	}
+	if len(nist.TechnicalControls) == 0 {
+		t.Fatal("expected nist technical_controls")
+	}
+}
+
 func goldenPath(t *testing.T, name string) string {
 	t.Helper()
 	_, file, _, ok := runtime.Caller(0)

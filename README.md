@@ -12,7 +12,7 @@ Open-source AI risk classification — CLI and API, deterministic and auditable,
 
 You describe an AI system (purpose, data types, deployment context, autonomy, who it affects). You get back a risk tier — prohibited, high-risk, limited-risk, or minimal-risk — with clause references, a plain-language rationale, and recommended controls. The ruleset is versioned JSON, not a model making something up.
 
-**Shipped regime pack:** `eu-ai-act` only (`eu-ai-act-2024-v0.1.0`). Multi-regime plumbing is in place (`regimes[]`, `.riskline.yaml`, `RISKLINE_REGIMES`); MAS/NIST packs are roadmap — not shipping claims. `geographic_scope` is not a regime selector.
+**Shipped regime packs:** `eu-ai-act` (`eu-ai-act-2024-v0.1.0`, hard law) and `nist-ai-rmf` (`nist-ai-rmf-2023-v0.1.0`, mapping — not US legal tiers). Multi-regime via `regimes[]`, `.riskline.yaml`, `RISKLINE_REGIMES`. MAS packs are next — not shipping claims yet. `geographic_scope` is not a regime selector.
 
 Distribution model borrows from Open Policy Agent and Trivy — single binary, no runtime, CI-friendly.
 
