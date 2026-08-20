@@ -1,0 +1,59 @@
+name: "riskline-assure"
+description: "Classify -> diff -> assure gate for EU AI Act continuous verification"
+inputs:
+  system_file:
+    description: "Path to the current system-description YAML/JSON to classify"
+    required: true
+  baseline_file:
+    description: "Path to the baseline system-description YAML/JSON used for material-change diff"
+    required: true
+  probes_file:
+    description: "Path to probes JSON mapping technical_hook to pass/fail"
+    required: true
+  go_version:
+    description: "Go version to use"
+    required: false
+    default: "1.25.x"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go_version }}
+    - name: Install riskline-cli
+      shell: bash
+      run: go install github.com/new-world-coder/riskline/cmd/riskline-cli@latest
+    - name: Classify system
+      shell: bash
+      run: riskline-cli --json "${{ inputs.system_file }}" > current_classification.json
+    - name: Detect material change
+      shell: bash
+      run: riskline-cli diff --json "${{ inputs.baseline_file }}" "${{ inputs.system_file }}" > material_change.json
+    - name: Run assurance
+      shell: bash
+      run: riskline-cli assure --json --probes "${{ inputs.probes_file }}" current_classification.json > assure_response.json
+    - name: Gate (fail on red or reclassify)
+      id: gate
+      shell: bash
+      run: |
+        set -euo pipefail
+        conformity_state="$(jq -r '.conformity_state' assure_response.json)"
+        material_impact="$(jq -r '.conformity_impact' material_change.json)"
+        material_summary="$(jq -r '.summary' material_change.json)"
+
+        echo "conformity_state=${conformity_state}" >> "$GITHUB_OUTPUT"
+        echo "material_change_summary=${material_summary}" >> "$GITHUB_OUTPUT"
+
+        if [ "$conformity_state" = "red" ] || [ "$material_impact" = "reclassify" ]; then
+          echo "riskline-assure gate failed: conformity_state=$conformity_state material_impact=$material_impact"
+          exit 1
+        fi
+outputs:
+  conformity_state:
+    description: "Conformity state from POST /v1/assure (green/amber/red)"
+    value: ${{ steps.gate.outputs.conformity_state }}
+  material_change_summary:
+    description: "Material-change summary from POST /v1/diff"
+    value: ${{ steps.gate.outputs.material_change_summary }}
+

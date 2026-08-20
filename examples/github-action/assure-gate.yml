@@ -1,0 +1,26 @@
+name: "EU AI Act assure gate (example)"
+
+on:
+  pull_request:
+    paths:
+      - "ai-system.yaml"
+      - "ai-system-baseline.yaml"
+      - "probes.json"
+
+jobs:
+  assure-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Riskline classify + assure
+        id: gate
+        uses: ./.github/actions/riskline-assure
+        with:
+          system_file: ai-system.yaml
+          baseline_file: ai-system-baseline.yaml
+          probes_file: probes.json
+      - name: Gate outputs
+        run: |
+          echo "conformity_state=${{ steps.gate.outputs.conformity_state }}"
+          echo "material_change_summary=${{ steps.gate.outputs.material_change_summary }}"
+

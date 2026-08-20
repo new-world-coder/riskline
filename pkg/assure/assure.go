@@ -155,6 +155,9 @@ func normalizeRequest(req schema.ClassifyRequest) map[string]any {
 	regs := append([]string(nil), req.Regimes...)
 	sort.Strings(regs)
 
+	tools := append([]string(nil), req.Tools...)
+	sort.Strings(tools)
+
 	return map[string]any{
 		"name":                                      req.Name,
 		"purpose":                                   strings.TrimSpace(strings.ToLower(req.Purpose)),
@@ -170,6 +173,12 @@ func normalizeRequest(req schema.ClassifyRequest) map[string]any {
 		"emotion_recognition_workplace_or_education": req.EmotionRecognitionWorkplaceOrEducation,
 		"manipulative_techniques":                   req.ManipulativeTechniques,
 		"exploits_vulnerabilities":                  req.ExploitsVulnerabilities,
+
+		// Runtime metadata
+		"model_id":              req.ModelID,
+		"system_prompt_hash":    req.SystemPromptHash,
+		"tools":                 tools,
+		"human_approval_required": req.HumanApprovalRequired,
 	}
 }
 

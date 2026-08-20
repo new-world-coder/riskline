@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0-alpha — 2026-08-20
+
+- **CI assure gate:** composite GitHub Action `.github/actions/riskline-assure` (classify → diff → assure; fail on red or reclassify)
+- **Signed evidence bundles:** Ed25519 export via `assure --sign` and `verify` CLI subcommand (local signing, not blockchain)
+- **Runtime metadata:** `model_id`, `system_prompt_hash`, `tools`, `human_approval_required` on `ClassifyRequest` for material-change fingerprints
+- **Material change rules:** model/prompt/tools changes → reclassify; human_approval_required-only → reassure
+
 ## 0.4.0-alpha — 2026-08-20
 
 - **Assure layer:** `POST /v1/assure`, `POST /v1/diff`; CLI `assure` and `diff` subcommands

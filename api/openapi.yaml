@@ -7,7 +7,7 @@ info:
 
     P0 ships eu-ai-act (hard law) and nist-ai-rmf (mapping). Request regimes[] to
     select packs; geographic_scope is not a regime selector and must not be overloaded.
-  version: 0.4.0-alpha
+  version: 0.5.0-alpha
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -209,6 +209,21 @@ components:
           default: false
         exploits_vulnerabilities:
           type: boolean
+          default: false
+        model_id:
+          type: string
+          description: Deployed LLM/model version identifier (runtime metadata for material-change detection)
+        system_prompt_hash:
+          type: string
+          description: Hash of the current system prompt (runtime metadata)
+        tools:
+          type: array
+          description: Connected tool/API names (runtime metadata)
+          items:
+            type: string
+        human_approval_required:
+          type: boolean
+          description: Whether human-in-the-loop is active (runtime metadata; change alone triggers reassure)
           default: false
 
     DataType:
@@ -596,6 +611,30 @@ components:
           type: string
         disclaimer:
           type: string
+
+    EvidenceBundle:
+      type: object
+      description: |
+        Locally signed assurance export. Ed25519 signature over canonical JSON of
+        payload. Not a public blockchain ledger — verify offline with public_key.
+      required:
+        - payload
+        - signature
+        - public_key
+        - algorithm
+      properties:
+        payload:
+          $ref: '#/components/schemas/AssureResponse'
+        signature:
+          type: string
+          description: Hex-encoded Ed25519 signature
+        public_key:
+          type: string
+          description: Hex-encoded Ed25519 public key
+        algorithm:
+          type: string
+          enum:
+            - ed25519
 
     ErrorResponse:
       type: object

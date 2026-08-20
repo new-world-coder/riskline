@@ -47,6 +47,105 @@ func TestDetectMaterialChangeReclassify(t *testing.T) {
 	}
 }
 
+func TestDetectMaterialChangeReclassifyModelID(t *testing.T) {
+	base := schema.ClassifyRequest{
+		Purpose:            "Screen job applicants",
+		DataTypes:          []schema.DataType{schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+	}
+	current := base
+	current.ModelID = "gpt-4.1.0"
+
+	result := engine.DetectMaterialChange(base, current)
+	if !result.Material {
+		t.Fatal("expected material change")
+	}
+	if result.ConformityImpact != schema.ImpactReclassify {
+		t.Fatalf("expected reclassify, got %s", result.ConformityImpact)
+	}
+}
+
+func TestDetectMaterialChangeReclassifySystemPromptHash(t *testing.T) {
+	base := schema.ClassifyRequest{
+		Purpose:            "Screen job applicants",
+		DataTypes:          []schema.DataType{schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+	}
+	current := base
+	current.SystemPromptHash = "sha256:deadbeef"
+
+	result := engine.DetectMaterialChange(base, current)
+	if !result.Material {
+		t.Fatal("expected material change")
+	}
+	if result.ConformityImpact != schema.ImpactReclassify {
+		t.Fatalf("expected reclassify, got %s", result.ConformityImpact)
+	}
+}
+
+func TestDetectMaterialChangeReassureHumanApprovalRequired(t *testing.T) {
+	base := schema.ClassifyRequest{
+		Purpose:            "Screen job applicants",
+		DataTypes:          []schema.DataType{schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+	}
+	current := base
+	current.HumanApprovalRequired = true
+
+	result := engine.DetectMaterialChange(base, current)
+	if !result.Material {
+		t.Fatal("expected material change")
+	}
+	if result.ConformityImpact != schema.ImpactReassure {
+		t.Fatalf("expected reassure, got %s", result.ConformityImpact)
+	}
+}
+
+func TestDetectMaterialChangeReclassifyTools(t *testing.T) {
+	base := schema.ClassifyRequest{
+		Purpose:            "Screen job applicants",
+		DataTypes:          []schema.DataType{schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+		Tools:              []string{"api.weather"},
+	}
+	current := base
+	current.Tools = []string{"api.weather", "db.hr"}
+
+	result := engine.DetectMaterialChange(base, current)
+	if !result.Material {
+		t.Fatal("expected material change")
+	}
+	if result.ConformityImpact != schema.ImpactReclassify {
+		t.Fatalf("expected reclassify, got %s", result.ConformityImpact)
+	}
+}
+
+func TestDetectMaterialChangeToolsOrderDoesNotMatter(t *testing.T) {
+	base := schema.ClassifyRequest{
+		Purpose:            "Screen job applicants",
+		DataTypes:          []schema.DataType{schema.DataEmployment},
+		DeploymentContext:  schema.DeploySaaSB2B,
+		AutonomyLevel:      schema.AutonomyDecisionSupport,
+		AffectedPopulation: schema.PopJobApplicants,
+		Tools:              []string{"api.weather", "db.hr"},
+	}
+	current := base
+	current.Tools = []string{"db.hr", "api.weather"}
+
+	result := engine.DetectMaterialChange(base, current)
+	if result.Material {
+		t.Fatalf("expected no material change for tool order, got %v", result.Material)
+	}
+}
+
 func TestEUHiringTechnicalControls(t *testing.T) {
 	eng, err := engine.Default()
 	if err != nil {

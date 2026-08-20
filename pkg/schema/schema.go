@@ -97,6 +97,14 @@ type ClassifyRequest struct {
 	EmotionRecognitionWorkplaceOrEducation bool               `json:"emotion_recognition_workplace_or_education,omitempty" yaml:"emotion_recognition_workplace_or_education,omitempty"`
 	ManipulativeTechniques                 bool               `json:"manipulative_techniques,omitempty" yaml:"manipulative_techniques,omitempty"`
 	ExploitsVulnerabilities                bool               `json:"exploits_vulnerabilities,omitempty" yaml:"exploits_vulnerabilities,omitempty"`
+
+	// Runtime metadata beyond the legal classification boundary.
+	// These fields affect the material-change fingerprint and may shift
+	// required re-classification / re-verification work.
+	ModelID              string   `json:"model_id,omitempty" yaml:"model_id,omitempty"`
+	SystemPromptHash    string   `json:"system_prompt_hash,omitempty" yaml:"system_prompt_hash,omitempty"`
+	Tools                []string `json:"tools,omitempty" yaml:"tools,omitempty"`
+	HumanApprovalRequired bool  `json:"human_approval_required,omitempty" yaml:"human_approval_required,omitempty"`
 }
 
 type MatchedRule struct {

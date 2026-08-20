@@ -80,3 +80,14 @@ type AssureResponse struct {
 	Summary          string             `json:"summary"`
 	Disclaimer       string             `json:"disclaimer"`
 }
+
+// EvidenceBundle is a locally signed assurance export (Ed25519 over canonical
+// JSON of payload). Not a public blockchain ledger — verify offline with the
+// embedded public_key.
+type EvidenceBundle struct {
+	Payload    AssureResponse `json:"payload"`
+	Signature  string         `json:"signature"`
+	PublicKey  string         `json:"public_key"`
+	Algorithm  string         `json:"algorithm"`
+	Disclaimer string         `json:"disclaimer"`
+}

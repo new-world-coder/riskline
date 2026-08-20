@@ -2,13 +2,16 @@
 
 Public signal of direction. If it is not listed here, assume it is not being built yet.
 
-## Now (v0.3.x → v0.4)
+## Now (v0.5.x)
 
 - Multi-regime foundation: pack loader, `regimes[]`, `.riskline.yaml` / `RISKLINE_REGIMES`
 - EU AI Act pack (`eu-ai-act` → `eu-ai-act-2024-v0.1.0`) with **technical_controls** on key high-risk rules
 - **Assure layer (v0.4-alpha):** `POST /v1/assure`, `POST /v1/diff`, conformity state, material change, SHA-256 evidence chain
+- **CI gate (v0.5-alpha):** GitHub Action `riskline-assure` — classify → diff → assure in PR pipelines
+- **Signed evidence (v0.5-alpha):** Ed25519 bundles via CLI `--sign` / `verify` (local, not blockchain)
+- **Runtime metadata (v0.5-alpha):** model_id, system_prompt_hash, tools, human_approval_required in material-change fingerprints
 - NIST AI RMF mapping pack with technical controls
-- Offline CLI: `classify`, `diff`, `assure` subcommands
+- Offline CLI: `classify`, `diff`, `assure`, `verify` subcommands
 - Versioned embedded ruleset with judgment-call notes
 - Misclassification + ruleset-update issue templates as the validation loop
 
@@ -24,7 +27,6 @@ Public signal of direction. If it is not listed here, assume it is not being bui
 
 ## Planned (not started)
 
-- Evidence generator
 - Executive / GRC dashboard
 - Third-party / vendor risk portal
 - Hosted multi-tenant SaaS + billing

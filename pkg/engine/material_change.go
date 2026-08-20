@@ -26,6 +26,12 @@ var reclassifyFields = []struct {
 	{"emotion_recognition_workplace_or_education", boolEq(func(r schema.ClassifyRequest) bool { return r.EmotionRecognitionWorkplaceOrEducation })},
 	{"manipulative_techniques", boolEq(func(r schema.ClassifyRequest) bool { return r.ManipulativeTechniques })},
 	{"exploits_vulnerabilities", boolEq(func(r schema.ClassifyRequest) bool { return r.ExploitsVulnerabilities })},
+
+	// Runtime metadata: changes can invalidate evidence at runtime and
+	// require re-classification / re-verification.
+	{"model_id", func(a, b schema.ClassifyRequest) bool { return a.ModelID == b.ModelID }},
+	{"system_prompt_hash", func(a, b schema.ClassifyRequest) bool { return a.SystemPromptHash == b.SystemPromptHash }},
+	{"tools", func(a, b schema.ClassifyRequest) bool { return sameStringSet(a.Tools, b.Tools) }},
 }
 
 func boolEq(f func(schema.ClassifyRequest) bool) func(a, b schema.ClassifyRequest) bool {
@@ -41,6 +47,23 @@ func sameDataTypes(a, b schema.ClassifyRequest) bool {
 		m[d]++
 	}
 	for _, d := range b.DataTypes {
+		if m[d] == 0 {
+			return false
+		}
+		m[d]--
+	}
+	return true
+}
+
+func sameStringSet(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	m := map[string]int{}
+	for _, d := range a {
+		m[d]++
+	}
+	for _, d := range b {
 		if m[d] == 0 {
 			return false
 		}
@@ -72,16 +95,25 @@ func DetectMaterialChange(baseline, current schema.ClassifyRequest) schema.Mater
 	}
 
 	if !material {
-		if baseline.Name != current.Name || baseline.GeographicScope != current.GeographicScope {
+		var nonTierChanged []string
+		if baseline.Name != current.Name {
+			nonTierChanged = append(nonTierChanged, "name")
+		}
+		if baseline.GeographicScope != current.GeographicScope {
+			nonTierChanged = append(nonTierChanged, "geographic_scope")
+		}
+		// Human-in-the-loop toggles may change assurance verification,
+		// but do not necessarily shift the legal tier.
+		if baseline.HumanApprovalRequired != current.HumanApprovalRequired {
+			nonTierChanged = append(nonTierChanged, "human_approval_required")
+		}
+
+		if len(nonTierChanged) > 0 {
 			impact = schema.ImpactReassure
 			material = true
-			summary = "Non-tier metadata changed (name or geographic_scope); re-run assurance probes."
-			if baseline.Name != current.Name {
-				changed = append(changed, "name")
-			}
-			if baseline.GeographicScope != current.GeographicScope {
-				changed = append(changed, "geographic_scope")
-			}
+			changed = append(changed, nonTierChanged...)
+			summary = fmt.Sprintf("Non-tier metadata changed in %d field(s) (%s); re-run assurance probes.",
+				len(nonTierChanged), strings.Join(nonTierChanged, ", "))
 		}
 	}
 

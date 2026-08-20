@@ -11,6 +11,7 @@ import (
 	"github.com/new-world-coder/riskline/pkg/assure"
 	"github.com/new-world-coder/riskline/pkg/config"
 	"github.com/new-world-coder/riskline/pkg/engine"
+	"github.com/new-world-coder/riskline/pkg/evidence"
 	"github.com/new-world-coder/riskline/pkg/ruleset"
 	"github.com/new-world-coder/riskline/pkg/schema"
 	"gopkg.in/yaml.v3"
@@ -25,6 +26,9 @@ func main() {
 		case "assure":
 			runAssure(os.Args[2:])
 			return
+		case "verify":
+			runVerify(os.Args[2:])
+			return
 		case "help", "-h", "--help":
 			printUsage()
 			return
@@ -37,7 +41,8 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
 	fmt.Fprintf(os.Stderr, "  %s [flags] <system-description.yaml|json>     Classify (default)\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "  %s diff <baseline> <current>                  Material change detection\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "  %s assure <classification.json> --probes f   Verify controls + conformity state\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  %s assure --probes f <classification.json>    Verify controls + conformity state\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  %s verify <bundle.evidence.json>              Verify Ed25519-signed evidence bundle\n", os.Args[0])
 }
 
 func runClassify(args []string) {
@@ -141,12 +146,13 @@ func runDiff(args []string) {
 func runAssure(args []string) {
 	fs := flag.NewFlagSet("assure", flag.ExitOnError)
 	jsonOut := fs.Bool("json", false, "emit machine-readable JSON")
+	signOut := fs.Bool("sign", false, "emit Ed25519-signed .evidence.json bundle (local signing, not blockchain)")
 	probesPath := fs.String("probes", "", "JSON file mapping technical_hook to pass/fail")
 	prevHash := fs.String("previous-hash", "", "optional prior evidence chain tail hash")
 	_ = fs.Parse(args)
 
 	if fs.NArg() != 1 || *probesPath == "" {
-		fmt.Fprintf(os.Stderr, "usage: %s assure --probes probes.json [--json] <classification.json>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s assure --probes probes.json [--json] [--sign] <classification.json>\n", os.Args[0])
 		os.Exit(2)
 	}
 
@@ -168,6 +174,21 @@ func runAssure(args []string) {
 		PreviousHash:   *prevHash,
 	})
 
+	if *signOut {
+		_, priv, err := evidence.GenerateKeyPair()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "sign: %v\n", err)
+			os.Exit(1)
+		}
+		bundle, err := evidence.SignBundle(resp, priv)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "sign bundle: %v\n", err)
+			os.Exit(1)
+		}
+		emitJSON(bundle)
+		return
+	}
+
 	if *jsonOut {
 		emitJSON(resp)
 		return
@@ -184,6 +205,45 @@ func runAssure(args []string) {
 		}
 	}
 	fmt.Printf("\nDisclaimer\n%s\n", resp.Disclaimer)
+}
+
+func runVerify(args []string) {
+	fs := flag.NewFlagSet("verify", flag.ExitOnError)
+	jsonOut := fs.Bool("json", false, "emit machine-readable JSON")
+	_ = fs.Parse(args)
+
+	if fs.NArg() != 1 {
+		fmt.Fprintf(os.Stderr, "usage: %s verify [--json] <bundle.evidence.json>\n", os.Args[0])
+		os.Exit(2)
+	}
+
+	var bundle schema.EvidenceBundle
+	if err := loadJSONFile(fs.Arg(0), &bundle); err != nil {
+		fmt.Fprintf(os.Stderr, "bundle: %v\n", err)
+		os.Exit(1)
+	}
+
+	ok, msg := evidence.VerifyBundle(bundle)
+	result := map[string]any{
+		"valid":      ok,
+		"message":    msg,
+		"algorithm":  bundle.Algorithm,
+		"public_key": bundle.PublicKey,
+		"disclaimer": schema.Disclaimer,
+	}
+
+	if *jsonOut {
+		emitJSON(result)
+	} else {
+		fmt.Printf("Valid:     %v\n", ok)
+		fmt.Printf("Message:   %s\n", msg)
+		fmt.Printf("Algorithm: %s\n", bundle.Algorithm)
+		fmt.Printf("\nDisclaimer\n%s\n", schema.Disclaimer)
+	}
+
+	if !ok {
+		os.Exit(1)
+	}
 }
 
 func loadJSONFile(path string, v any) error {
