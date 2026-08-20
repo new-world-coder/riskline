@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/new-world-coder/riskline/pkg/assure"
 	"github.com/new-world-coder/riskline/pkg/config"
 	"github.com/new-world-coder/riskline/pkg/engine"
 	"github.com/new-world-coder/riskline/pkg/ruleset"
@@ -16,16 +17,35 @@ import (
 )
 
 func main() {
-	jsonOut := flag.Bool("json", false, "emit machine-readable JSON")
-	regimesFlag := flag.String("regimes", "", "comma-separated regime packs (default: request, RISKLINE_REGIMES, .riskline.yaml, or eu-ai-act)")
-	listRegimes := flag.Bool("list-regimes", false, "print shipped regime pack IDs and exit")
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [flags] <system-description.yaml|json>\n\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Classify an AI system against versioned regime packs. Runs fully offline.\n")
-		fmt.Fprintf(os.Stderr, "P0 ships eu-ai-act only; geographic_scope is not a regime selector.\n\n")
-		flag.PrintDefaults()
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "diff":
+			runDiff(os.Args[2:])
+			return
+		case "assure":
+			runAssure(os.Args[2:])
+			return
+		case "help", "-h", "--help":
+			printUsage()
+			return
+		}
 	}
-	flag.Parse()
+	runClassify(os.Args[1:])
+}
+
+func printUsage() {
+	fmt.Fprintf(os.Stderr, "Usage:\n")
+	fmt.Fprintf(os.Stderr, "  %s [flags] <system-description.yaml|json>     Classify (default)\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  %s diff <baseline> <current>                  Material change detection\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  %s assure <classification.json> --probes f   Verify controls + conformity state\n", os.Args[0])
+}
+
+func runClassify(args []string) {
+	fs := flag.NewFlagSet("classify", flag.ExitOnError)
+	jsonOut := fs.Bool("json", false, "emit machine-readable JSON")
+	regimesFlag := fs.String("regimes", "", "comma-separated regime packs")
+	listRegimes := fs.Bool("list-regimes", false, "print shipped regime pack IDs and exit")
+	_ = fs.Parse(args)
 
 	loader, err := ruleset.DefaultLoader()
 	if err != nil {
@@ -40,12 +60,12 @@ func main() {
 		return
 	}
 
-	if flag.NArg() != 1 {
-		flag.Usage()
+	if fs.NArg() != 1 {
+		printUsage()
 		os.Exit(2)
 	}
 
-	path := flag.Arg(0)
+	path := fs.Arg(0)
 	req, err := loadRequest(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "load input: %v\n", err)
@@ -76,20 +96,114 @@ func main() {
 	}
 
 	if *jsonOut {
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(resp); err != nil {
-			fmt.Fprintf(os.Stderr, "encode: %v\n", err)
-			os.Exit(1)
-		}
+		emitJSON(resp)
 		return
 	}
-
 	printHuman(resp)
 }
 
+func runDiff(args []string) {
+	fs := flag.NewFlagSet("diff", flag.ExitOnError)
+	jsonOut := fs.Bool("json", false, "emit machine-readable JSON")
+	_ = fs.Parse(args)
+
+	if fs.NArg() != 2 {
+		fmt.Fprintf(os.Stderr, "usage: %s diff <baseline.yaml> <current.yaml>\n", os.Args[0])
+		os.Exit(2)
+	}
+
+	baseline, err := loadRequest(fs.Arg(0))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "baseline: %v\n", err)
+		os.Exit(1)
+	}
+	current, err := loadRequest(fs.Arg(1))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "current: %v\n", err)
+		os.Exit(1)
+	}
+
+	resp := engine.DetectMaterialChange(baseline, current)
+	if *jsonOut {
+		emitJSON(resp)
+		return
+	}
+
+	fmt.Printf("Material:         %v\n", resp.Material)
+	fmt.Printf("Impact:           %s\n", resp.ConformityImpact)
+	fmt.Printf("Changed fields:   %s\n", strings.Join(resp.ChangedFields, ", "))
+	fmt.Printf("Prior fingerprint:  %s\n", resp.PriorFingerprint)
+	fmt.Printf("Current fingerprint: %s\n", resp.CurrentFingerprint)
+	fmt.Printf("\n%s\n", resp.Summary)
+	fmt.Printf("\nDisclaimer\n%s\n", resp.Disclaimer)
+}
+
+func runAssure(args []string) {
+	fs := flag.NewFlagSet("assure", flag.ExitOnError)
+	jsonOut := fs.Bool("json", false, "emit machine-readable JSON")
+	probesPath := fs.String("probes", "", "JSON file mapping technical_hook to pass/fail")
+	prevHash := fs.String("previous-hash", "", "optional prior evidence chain tail hash")
+	_ = fs.Parse(args)
+
+	if fs.NArg() != 1 || *probesPath == "" {
+		fmt.Fprintf(os.Stderr, "usage: %s assure --probes probes.json [--json] <classification.json>\n", os.Args[0])
+		os.Exit(2)
+	}
+
+	var classification schema.ClassifyResponse
+	if err := loadJSONFile(fs.Arg(0), &classification); err != nil {
+		fmt.Fprintf(os.Stderr, "classification: %v\n", err)
+		os.Exit(1)
+	}
+
+	probes := map[string]bool{}
+	if err := loadJSONFile(*probesPath, &probes); err != nil {
+		fmt.Fprintf(os.Stderr, "probes: %v\n", err)
+		os.Exit(1)
+	}
+
+	resp := assure.Evaluate(schema.AssureRequest{
+		Classification: classification,
+		Probes:         probes,
+		PreviousHash:   *prevHash,
+	})
+
+	if *jsonOut {
+		emitJSON(resp)
+		return
+	}
+
+	fmt.Printf("Conformity state: %s\n", resp.ConformityState)
+	fmt.Printf("Failed:           %d\n", resp.FailedCount)
+	fmt.Printf("Unverified:       %d\n", resp.UnverifiedCount)
+	fmt.Printf("\n%s\n", resp.Summary)
+	if len(resp.EvidenceRecords) > 0 {
+		fmt.Println("\nEvidence records (SHA-256 chain)")
+		for _, rec := range resp.EvidenceRecords {
+			fmt.Printf("  %s  %s  hash=%s\n", rec.ControlID, rec.Result, rec.ContentHash[:16]+"...")
+		}
+	}
+	fmt.Printf("\nDisclaimer\n%s\n", resp.Disclaimer)
+}
+
+func loadJSONFile(path string, v any) error {
+	data, err := os.ReadFile(path) // #nosec G304
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, v)
+}
+
+func emitJSON(v any) {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(v); err != nil {
+		fmt.Fprintf(os.Stderr, "encode: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 func loadRequest(path string) (schema.ClassifyRequest, error) {
-	// filepath is a user-supplied local system description (CLI argument).
 	data, err := os.ReadFile(path) // #nosec G304 -- intentional offline classify input
 	if err != nil {
 		return schema.ClassifyRequest{}, err
@@ -104,7 +218,6 @@ func loadRequest(path string) (schema.ClassifyRequest, error) {
 		}
 	default:
 		if err := json.Unmarshal(data, &req); err != nil {
-			// try YAML as a fallback for extension-less files
 			if err2 := yaml.Unmarshal(data, &req); err2 != nil {
 				return schema.ClassifyRequest{}, fmt.Errorf("json: %v; yaml: %v", err, err2)
 			}
@@ -132,6 +245,13 @@ func printHuman(resp schema.ClassifyResponse) {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", r.ID, r.Tier, r.ArticleOrAnnex)
 		}
 		_ = w.Flush()
+	}
+
+	if len(resp.TechnicalControls) > 0 {
+		fmt.Println("\nTechnical controls (Assure probes)")
+		for _, tc := range resp.TechnicalControls {
+			fmt.Printf("  - %s (%s) hook=%s\n", tc.ID, tc.PaperRef, tc.TechnicalHook)
+		}
 	}
 
 	if len(resp.Classifications) > 1 {

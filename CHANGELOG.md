@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0-alpha — 2026-08-20
+
+- **Assure layer:** `POST /v1/assure`, `POST /v1/diff`; CLI `assure` and `diff` subcommands
+- **Conformity state:** `green` / `amber` / `red` from probe results against classified `technical_controls`
+- **Material change:** SHA-256 fingerprints; `reclassify` vs `reassure` impact taxonomy
+- **Evidence records:** local SHA-256 hash chain (tamper-evident; not blockchain)
+- **EU pack:** `technical_controls` on recruitment, employment, credit, Art. 50 chatbot rules
+
 ## 0.3.0-alpha — 2026-08-17
 
 - **NIST AI RMF mapping pack** (`nist-ai-rmf` → `nist-ai-rmf-2023-v0.1.0`): Govern/Map/Measure/Manage subcategory mappings — not fake US legal tiers.

@@ -98,6 +98,29 @@
         "Keep logs and technical documentation for conformity assessment",
         "Assess bias and discrimination risks in candidate scoring"
       ],
+      "technical_controls": [
+        {
+          "id": "eu-art9-risk-management",
+          "paper_ref": "EU AI Act Article 9",
+          "summary": "Maintain a documented, iterative risk management process for the high-risk hiring system",
+          "technical_hook": "docs.risk_management_system",
+          "evidence_type": "risk_management_record + classify_json"
+        },
+        {
+          "id": "eu-art14-human-oversight-hiring",
+          "paper_ref": "EU AI Act Article 14",
+          "summary": "Human oversight before adverse hiring outcomes; override path active",
+          "technical_hook": "workflow.human_review_required",
+          "evidence_type": "audit_log + override_audit_log"
+        },
+        {
+          "id": "eu-art12-logging",
+          "paper_ref": "EU AI Act Article 12",
+          "summary": "Automatic logging of hiring AI events for traceability",
+          "technical_hook": "logging.automatic_events",
+          "evidence_type": "structured_audit_log"
+        }
+      ],
       "judgment_call": true,
       "judgment_call_note": "Matching on purpose keywords or job_applicants population is a pragmatic proxy; borderline HR analytics that only aggregate headcount may be over-classified and should be reported via misclassification issues."
     },
@@ -116,6 +139,15 @@
         "Inform workers about AI use affecting them",
         "Document intended purpose and limits of monitoring"
       ],
+      "technical_controls": [
+        {
+          "id": "eu-art14-human-oversight-employment",
+          "paper_ref": "EU AI Act Article 14",
+          "summary": "Human oversight of employment decisions supported by AI",
+          "technical_hook": "workflow.human_review_required",
+          "evidence_type": "audit_log + signed_classify_json"
+        }
+      ],
       "judgment_call": false
     },
     {
@@ -133,6 +165,22 @@
         "Run a conformity assessment appropriate to the credit use case",
         "Ensure transparency of scoring factors to affected persons where required",
         "Monitor for discriminatory outcomes across protected groups"
+      ],
+      "technical_controls": [
+        {
+          "id": "eu-art9-risk-management-credit",
+          "paper_ref": "EU AI Act Article 9",
+          "summary": "Documented risk management for creditworthiness AI",
+          "technical_hook": "docs.risk_management_system",
+          "evidence_type": "risk_management_record"
+        },
+        {
+          "id": "eu-art13-transparency-credit",
+          "paper_ref": "EU AI Act Article 13",
+          "summary": "Transparency of credit decision logic to deployers",
+          "technical_hook": "docs.instructions_for_use",
+          "evidence_type": "instructions_for_use_pdf"
+        }
       ],
       "judgment_call": true,
       "judgment_call_note": "Fraud-detection carve-out is not inferred automatically; systems labelled only as fraud detection may still match on financial_credit_data and need a misclassification review."
@@ -222,6 +270,15 @@
       "recommended_controls": [
         "Disclose AI interaction to end users at the start of the conversation",
         "Keep disclosure clear and accessible"
+      ],
+      "technical_controls": [
+        {
+          "id": "eu-art50-ai-disclosure",
+          "paper_ref": "EU AI Act Article 50(1)",
+          "summary": "Users informed they interact with an AI system unless obvious from context",
+          "technical_hook": "ui.ai_disclosure_shown",
+          "evidence_type": "ui_test + screenshot"
+        }
       ],
       "judgment_call": true,
       "judgment_call_note": "Art. 50 applies more broadly than chatbots; requiring both an interactive autonomy level and chatbot-like purpose keywords may under-detect non-chat interactive systems."

@@ -7,7 +7,7 @@ info:
 
     P0 ships eu-ai-act (hard law) and nist-ai-rmf (mapping). Request regimes[] to
     select packs; geographic_scope is not a regime selector and must not be overloaded.
-  version: 0.3.0-alpha
+  version: 0.4.0-alpha
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -66,6 +66,65 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/diff:
+    post:
+      operationId: diffSystemDescription
+      summary: Detect material change between two system descriptions
+      description: |
+        Compares baseline and current ClassifyRequest values and returns whether
+        the change is material for conformity (re-classify vs re-assure only).
+      tags:
+        - Assurance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiffRequest'
+      responses:
+        '200':
+          description: Material change analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialChangeResult'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/assure:
+    post:
+      operationId: assureControls
+      summary: Verify technical controls and compute conformity state
+      description: |
+        Layer 2 Assure: given a classification and probe results keyed by
+        technical_hook (or control id), returns GREEN/AMBER/RED conformity state
+        and SHA-256 evidence records (local hash chain, not blockchain).
+      tags:
+        - Assurance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssureRequest'
+      responses:
+        '200':
+          description: Assurance result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssureResponse'
+        '400':
+          description: Invalid request
           content:
             application/json:
               schema:
@@ -387,6 +446,156 @@ components:
         last_updated:
           type: string
           format: date
+
+    DiffRequest:
+      type: object
+      required:
+        - baseline
+        - current
+      properties:
+        baseline:
+          $ref: '#/components/schemas/ClassifyRequest'
+        current:
+          $ref: '#/components/schemas/ClassifyRequest'
+
+    ConformityState:
+      type: string
+      enum:
+        - green
+        - amber
+        - red
+
+    ConformityImpact:
+      type: string
+      enum:
+        - none
+        - reassure
+        - reclassify
+
+    MaterialChangeResult:
+      type: object
+      required:
+        - material
+        - conformity_impact
+        - prior_fingerprint
+        - current_fingerprint
+        - summary
+        - disclaimer
+      properties:
+        material:
+          type: boolean
+        conformity_impact:
+          $ref: '#/components/schemas/ConformityImpact'
+        changed_fields:
+          type: array
+          items:
+            type: string
+        prior_fingerprint:
+          type: string
+        current_fingerprint:
+          type: string
+        summary:
+          type: string
+        disclaimer:
+          type: string
+
+    ControlVerdict:
+      type: object
+      required:
+        - control_id
+        - technical_hook
+        - paper_ref
+        - evidence_type
+        - passed
+      properties:
+        control_id:
+          type: string
+        technical_hook:
+          type: string
+        paper_ref:
+          type: string
+        evidence_type:
+          type: string
+        passed:
+          type: boolean
+        reason:
+          type: string
+
+    EvidenceRecord:
+      type: object
+      required:
+        - id
+        - timestamp
+        - ruleset_version
+        - control_id
+        - result
+        - content_hash
+        - algorithm
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        system_name:
+          type: string
+        ruleset_version:
+          type: string
+        control_id:
+          type: string
+        result:
+          type: string
+        content_hash:
+          type: string
+        previous_hash:
+          type: string
+        algorithm:
+          type: string
+
+    AssureRequest:
+      type: object
+      required:
+        - classification
+        - probes
+      properties:
+        classification:
+          $ref: '#/components/schemas/ClassifyResponse'
+        probes:
+          type: object
+          additionalProperties:
+            type: boolean
+        previous_hash:
+          type: string
+
+    AssureResponse:
+      type: object
+      required:
+        - conformity_state
+        - control_verdicts
+        - evidence_records
+        - unverified_count
+        - failed_count
+        - summary
+        - disclaimer
+      properties:
+        conformity_state:
+          $ref: '#/components/schemas/ConformityState'
+        control_verdicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ControlVerdict'
+        evidence_records:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceRecord'
+        unverified_count:
+          type: integer
+        failed_count:
+          type: integer
+        summary:
+          type: string
+        disclaimer:
+          type: string
 
     ErrorResponse:
       type: object

@@ -1,0 +1,5 @@
+{
+  "workflow.human_review_required": true,
+  "docs.risk_management_system": true,
+  "logging.automatic_events": true
+}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/new-world-coder/riskline/pkg/assure"
 	"github.com/new-world-coder/riskline/pkg/engine"
 	"github.com/new-world-coder/riskline/pkg/schema"
 )
@@ -18,6 +19,8 @@ func New(eng *engine.Engine) *Server {
 	s := &Server{eng: eng, mux: http.NewServeMux()}
 	s.mux.HandleFunc("GET /healthz", s.handleHealthz)
 	s.mux.HandleFunc("POST /v1/classify", s.handleClassify)
+	s.mux.HandleFunc("POST /v1/diff", s.handleDiff)
+	s.mux.HandleFunc("POST /v1/assure", s.handleAssure)
 	return s
 }
 
@@ -51,6 +54,42 @@ func (s *Server) handleClassify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(resp)
+}
+
+func (s *Server) handleDiff(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var req schema.DiffRequest
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body", []string{err.Error()})
+		return
+	}
+
+	resp := engine.DetectMaterialChange(req.Baseline, req.Current)
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(resp)
+}
+
+func (s *Server) handleAssure(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var req schema.AssureRequest
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body", []string{err.Error()})
+		return
+	}
+
+	resp := assure.Evaluate(req)
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")

@@ -2,12 +2,13 @@
 
 Public signal of direction. If it is not listed here, assume it is not being built yet.
 
-## Now (v0.3.x)
+## Now (v0.3.x → v0.4)
 
 - Multi-regime foundation: pack loader, `regimes[]`, `.riskline.yaml` / `RISKLINE_REGIMES`
-- EU AI Act pack (`eu-ai-act` → `eu-ai-act-2024-v0.1.0`)
-- **NIST AI RMF mapping pack** (`nist-ai-rmf` → `nist-ai-rmf-2023-v0.1.0`) with **technical controls**
-- Offline CLI (`riskline-cli`) + thin API (`riskline-api`)
+- EU AI Act pack (`eu-ai-act` → `eu-ai-act-2024-v0.1.0`) with **technical_controls** on key high-risk rules
+- **Assure layer (v0.4-alpha):** `POST /v1/assure`, `POST /v1/diff`, conformity state, material change, SHA-256 evidence chain
+- NIST AI RMF mapping pack with technical controls
+- Offline CLI: `classify`, `diff`, `assure` subcommands
 - Versioned embedded ruleset with judgment-call notes
 - Misclassification + ruleset-update issue templates as the validation loop
 
