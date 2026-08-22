@@ -11,6 +11,7 @@ import (
 
 	"github.com/new-world-coder/riskline/pkg/assure"
 	"github.com/new-world-coder/riskline/pkg/engine"
+	"github.com/new-world-coder/riskline/pkg/evidence"
 	"github.com/new-world-coder/riskline/pkg/schema"
 )
 
@@ -122,7 +123,7 @@ func Verify(req schema.VerifyRuntimeRequest, now time.Time) (schema.VerifyRuntim
 		baselineFP = req.Baseline.Fingerprint
 	}
 
-	receipt := buildReceipt(obs, result, violations, runtimeFP, baselineFP, obs.PolicyVersion, now, "")
+	receipt := buildReceipt(obs, result, violations, runtimeFP, baselineFP, obs.PolicyVersion, now, req.PreviousReceiptHash)
 
 	return schema.VerifyRuntimeResponse{
 		Result:  result,
@@ -336,7 +337,7 @@ func buildReceipt(
 		ConformityState:     result.ConformityState,
 		PreviousReceiptHash: previousHash,
 	}
-	receipt.ReceiptHash = hashReceipt(receipt)
+	receipt.ReceiptHash = evidence.ReceiptContentHash(receipt)
 	return receipt
 }
 
@@ -346,18 +347,9 @@ func newVerificationID(obs schema.RuntimeObservation, at time.Time) string {
 	return hex.EncodeToString(sum[:16])
 }
 
-func hashReceipt(r schema.VerificationReceipt) string {
-	stub := r
-	stub.ReceiptHash = ""
-	stub.Signature = ""
-	stub.PublicKey = ""
-	stub.Algorithm = ""
-	data, err := json.Marshal(stub)
-	if err != nil {
-		return ""
-	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
+// HashReceipt returns SHA-256 over canonical receipt content (exported for signing).
+func HashReceipt(r schema.VerificationReceipt) string {
+	return evidence.ReceiptContentHash(r)
 }
 
 // HashObservation returns a stable fingerprint of runtime observation metadata.

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/new-world-coder/riskline/pkg/evidence"
 	"github.com/new-world-coder/riskline/pkg/runtime"
 	"github.com/new-world-coder/riskline/pkg/schema"
 )
@@ -230,6 +231,65 @@ func TestVerifyConfigChangeToolDriftAmber(t *testing.T) {
 	}
 	if resp.Result.ConformityState != schema.ConformityAmber {
 		t.Fatalf("expected amber for config tool drift, got %s", resp.Result.ConformityState)
+	}
+}
+
+func TestVerifyReceiptChainIntegration(t *testing.T) {
+	baseline, policy := registerFixture(t)
+
+	resp1, err := runtime.Verify(schema.VerifyRuntimeRequest{
+		Observation: baseObservation(),
+		Policy:      &policy,
+		Baseline:    &baseline,
+	}, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp2, err := runtime.Verify(schema.VerifyRuntimeRequest{
+		Observation:         baseObservation(),
+		Policy:              &policy,
+		Baseline:            &baseline,
+		PreviousReceiptHash: resp1.Receipt.ReceiptHash,
+	}, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if resp2.Receipt.PreviousReceiptHash != resp1.Receipt.ReceiptHash {
+		t.Fatalf("expected chain link, got %s", resp2.Receipt.PreviousReceiptHash)
+	}
+
+	ok, msg := evidence.VerifyReceiptChain([]schema.VerificationReceipt{resp1.Receipt, resp2.Receipt})
+	if !ok {
+		t.Fatalf("chain broken: %s", msg)
+	}
+}
+
+func TestSignReceiptBundleEndToEnd(t *testing.T) {
+	baseline, policy := registerFixture(t)
+	resp, err := runtime.Verify(schema.VerifyRuntimeRequest{
+		Observation: baseObservation(),
+		Policy:      &policy,
+		Baseline:    &baseline,
+	}, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, priv, err := evidence.GenerateKeyPair()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bundle, err := evidence.SignReceiptBundle(resp.Receipt, priv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ok, msg := evidence.VerifyReceiptBundle(bundle)
+	if !ok {
+		t.Fatalf("verify signed receipt: %s", msg)
 	}
 }
 

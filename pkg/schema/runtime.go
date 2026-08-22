@@ -124,9 +124,19 @@ type RegisterRuntimeResponse struct {
 
 // VerifyRuntimeRequest compares an observation against registered or inline policy.
 type VerifyRuntimeRequest struct {
-	Observation RuntimeObservation `json:"observation"`
-	Policy      *RuntimePolicy     `json:"policy,omitempty"`
-	Baseline    *RuntimeBaseline   `json:"baseline,omitempty"`
+	Observation         RuntimeObservation `json:"observation"`
+	Policy              *RuntimePolicy     `json:"policy,omitempty"`
+	Baseline            *RuntimeBaseline   `json:"baseline,omitempty"`
+	PreviousReceiptHash string             `json:"previous_receipt_hash,omitempty"`
+}
+
+// VerificationReceiptBundle is a locally signed runtime verification export.
+type VerificationReceiptBundle struct {
+	Payload    VerificationReceipt `json:"payload"`
+	Signature  string              `json:"signature"`
+	PublicKey  string              `json:"public_key"`
+	Algorithm  string              `json:"algorithm"`
+	Disclaimer string              `json:"disclaimer"`
 }
 
 // VerifyRuntimeResponse returns the verification outcome and receipt stub.
