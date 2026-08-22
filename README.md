@@ -16,7 +16,7 @@ You describe an AI system (purpose, data types, deployment context, autonomy, wh
 
 Distribution model borrows from Open Policy Agent and Trivy — single binary, no runtime, CI-friendly.
 
-**Website:** [new-world-coder.github.io/riskline](https://new-world-coder.github.io/riskline/) · [Printable one-pager](https://new-world-coder.github.io/riskline/one-pager.html)
+**Website:** [new-world-coder.github.io/riskline](https://new-world-coder.github.io/riskline/) · [Printable one-pager](https://new-world-coder.github.io/riskline/one-pager.html) · [Console demo](https://riskline-cloud-web.vercel.app/console) (mock GRC dashboards)
 
 ## Why this exists
 
@@ -67,6 +67,7 @@ Early access for a hosted endpoint: open a thread in [GitHub Discussions](https:
 - [Why I built the compliance engine in Go](docs/blog/03-why-go-for-a-compliance-engine.md)
 - [EU AI Act classification belongs in CI — not another portal](docs/blog/04-eu-ai-act-in-ci-not-a-portal.md)
 - [Singapore AI governance meets deterministic EU classification](docs/blog/05-singapore-ai-governance-meets-deterministic-classification.md)
+- [Introducing the Riskline Console](docs/blog/06-introducing-riskline-console.md) — role-based trust dashboards (demo; mock data)
 
 See also [ROADMAP.md](ROADMAP.md) and ready-to-post copy in [`content/social/LAUNCH_COPY.md`](content/social/LAUNCH_COPY.md) / [`content/social/OUTREACH_EU_SG.md`](content/social/OUTREACH_EU_SG.md).
 
