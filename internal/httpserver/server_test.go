@@ -103,3 +103,47 @@ func TestHealthz(t *testing.T) {
 		t.Fatalf("healthz failed: %d %s", rr.Code, rr.Body.String())
 	}
 }
+
+func TestRuntimeVerifyEndpoint(t *testing.T) {
+	eng, err := engine.Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := New(eng)
+
+	body := `{
+		"observation": {
+			"system_id": "hiring-assist-prod",
+			"deployment_id": "deploy-eu-1",
+			"model_id": "gpt-4.1",
+			"tools": ["payments.write"],
+			"event_type": "tool_call",
+			"human_approval_granted": true,
+			"timestamp": "2026-08-22T12:05:00Z"
+		},
+		"policy": {
+			"approved_models": ["gpt-4.1"],
+			"approved_tools": ["ats_lookup", "calendar"],
+			"forbidden_tools": ["payments.write"],
+			"max_autonomy": "decision_support",
+			"required_controls": ["eu-art14-human-oversight-hiring"],
+			"risk_tier": "high_risk",
+			"human_approval_required": true
+		}
+	}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/runtime/verify", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	srv.Handler().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+	var resp schema.VerifyRuntimeResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Result.ConformityState != schema.ConformityRed {
+		t.Fatalf("expected red, got %s", resp.Result.ConformityState)
+	}
+}

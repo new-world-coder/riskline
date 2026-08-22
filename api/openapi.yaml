@@ -145,6 +145,194 @@ paths:
                 type: string
                 example: ok
 
+  /v1/runtime/register:
+    post:
+      operationId: registerRuntime
+      summary: Register a deployment baseline and derived runtime policy
+      description: |
+        Layer 3 Runtime: binds a classified and assured system to a deployment,
+        producing a baseline fingerprint and policy envelope for continuous verification.
+        Handler not implemented in Phase 1 — schema and contract only.
+      tags:
+        - Runtime
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRuntimeRequest'
+      responses:
+        '200':
+          description: Registration result with baseline and policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterRuntimeResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not implemented (Phase 1 schema stub)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/runtime/observe:
+    post:
+      operationId: observeRuntime
+      summary: Submit a metadata-only runtime observation
+      description: |
+        Accepts a runtime signal (inference, tool call, deploy, etc.) for
+        continuous verification. Handler not implemented in Phase 1.
+      tags:
+        - Runtime
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuntimeObservation'
+      responses:
+        '202':
+          description: Observation accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObserveRuntimeResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not implemented (Phase 1 schema stub)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/runtime/verify:
+    post:
+      operationId: verifyRuntime
+      summary: Verify a runtime observation against policy and baseline
+      description: |
+        Compares an observation to registered or inline policy/baseline and returns
+        conformity state, violations, and a verification receipt stub.
+        Handler not implemented in Phase 1.
+      tags:
+        - Runtime
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyRuntimeRequest'
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyRuntimeResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not implemented (Phase 1 schema stub)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/runtime/{system_id}/status:
+    get:
+      operationId: getRuntimeStatus
+      summary: Current runtime conformity status for a system
+      description: |
+        Returns the latest conformity posture for a registered system.
+        Not implemented in Phase 1 — returns 503 until the runtime engine ships.
+      tags:
+        - Runtime
+      parameters:
+        - name: system_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Registered system identifier
+      responses:
+        '200':
+          description: Current runtime status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeStatusResponse'
+        '404':
+          description: System not registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Runtime engine not implemented (Phase 1 schema stub)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/runtime/{system_id}/history:
+    get:
+      operationId: getRuntimeHistory
+      summary: Verification receipt history for a system
+      description: |
+        Returns prior verification receipts for audit replay.
+        Handler not implemented in Phase 1.
+      tags:
+        - Runtime
+      parameters:
+        - name: system_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Registered system identifier
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 50
+          description: Maximum number of receipts to return
+      responses:
+        '200':
+          description: Verification receipt history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeHistoryResponse'
+        '404':
+          description: System not registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not implemented (Phase 1 schema stub)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     ClassifyRequest:
@@ -635,6 +823,363 @@ components:
           type: string
           enum:
             - ed25519
+
+    RuntimeEventType:
+      type: string
+      enum:
+        - inference
+        - tool_call
+        - human_override
+        - deploy
+        - config_change
+
+    RuntimeObservation:
+      type: object
+      required:
+        - system_id
+        - deployment_id
+        - event_type
+        - human_approval_granted
+        - timestamp
+      properties:
+        system_id:
+          type: string
+          description: Registered system identifier
+        deployment_id:
+          type: string
+          description: Deployment or environment identifier
+        model_id:
+          type: string
+          description: Deployed model version observed at runtime
+        system_prompt_hash:
+          type: string
+          description: Hash of the active system prompt
+        tools:
+          type: array
+          description: Connected tools observed at runtime
+          items:
+            type: string
+        event_type:
+          $ref: '#/components/schemas/RuntimeEventType'
+        data_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataType'
+        geography:
+          $ref: '#/components/schemas/GeographicScope'
+        autonomy_level:
+          $ref: '#/components/schemas/AutonomyLevel'
+        human_approval_granted:
+          type: boolean
+          description: Whether human approval was active for this event
+        policy_version:
+          type: string
+        ruleset_version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        metrics:
+          type: object
+          description: Optional numeric runtime metrics (latency, token counts, etc.)
+          additionalProperties:
+            type: number
+            format: double
+
+    RuntimeBaseline:
+      type: object
+      required:
+        - system_id
+        - deployment_id
+        - fingerprint
+        - approved_at
+        - source_classification
+      properties:
+        system_id:
+          type: string
+        deployment_id:
+          type: string
+        fingerprint:
+          type: string
+          description: SHA-256 fingerprint of the approved runtime posture
+        approved_at:
+          type: string
+          format: date-time
+        source_classification:
+          $ref: '#/components/schemas/ClassifyRequest'
+          description: Classification input fields used to compute the baseline fingerprint
+
+    RuntimePolicy:
+      type: object
+      required:
+        - max_autonomy
+        - required_controls
+        - risk_tier
+        - human_approval_required
+      properties:
+        approved_models:
+          type: array
+          items:
+            type: string
+        forbidden_models:
+          type: array
+          items:
+            type: string
+        approved_tools:
+          type: array
+          items:
+            type: string
+        forbidden_tools:
+          type: array
+          items:
+            type: string
+        approved_data_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataType'
+        forbidden_data_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataType'
+        approved_geography:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeographicScope'
+        forbidden_geography:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeographicScope'
+        max_autonomy:
+          $ref: '#/components/schemas/AutonomyLevel'
+        required_controls:
+          type: array
+          items:
+            type: string
+        risk_tier:
+          $ref: '#/components/schemas/RiskTier'
+        human_approval_required:
+          type: boolean
+
+    RuntimeViolationSeverity:
+      type: string
+      enum:
+        - info
+        - warn
+        - critical
+
+    RuntimeViolation:
+      type: object
+      required:
+        - code
+        - severity
+        - field
+        - expected
+        - actual
+        - conformity_impact
+      properties:
+        code:
+          type: string
+          example: forbidden_model
+        severity:
+          $ref: '#/components/schemas/RuntimeViolationSeverity'
+        field:
+          type: string
+          example: model_id
+        expected:
+          type: string
+        actual:
+          type: string
+        conformity_impact:
+          $ref: '#/components/schemas/ConformityImpact'
+
+    VerificationResult:
+      type: object
+      required:
+        - conformity_state
+        - summary
+      properties:
+        conformity_state:
+          $ref: '#/components/schemas/ConformityState'
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuntimeViolation'
+        risk_delta:
+          type: string
+          description: Description of risk posture change relative to baseline
+        controls_failed:
+          type: array
+          items:
+            type: string
+        recommended_action:
+          type: string
+        summary:
+          type: string
+
+    VerificationReceipt:
+      type: object
+      description: |
+        Tamper-evident runtime verification artifact. Local SHA-256 hash chain and
+        optional Ed25519 signature — not a public blockchain ledger.
+      required:
+        - verification_id
+        - system_id
+        - verified_at
+        - runtime_fingerprint
+        - baseline_fingerprint
+        - policy_version
+        - conformity_state
+        - receipt_hash
+      properties:
+        verification_id:
+          type: string
+        system_id:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+        observed_at:
+          type: string
+          format: date-time
+        runtime_fingerprint:
+          type: string
+        baseline_fingerprint:
+          type: string
+        policy_version:
+          type: string
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuntimeViolation'
+        conformity_state:
+          $ref: '#/components/schemas/ConformityState'
+        receipt_hash:
+          type: string
+        previous_receipt_hash:
+          type: string
+        signature:
+          type: string
+          description: Hex-encoded Ed25519 signature
+        public_key:
+          type: string
+          description: Hex-encoded Ed25519 public key
+        algorithm:
+          type: string
+          enum:
+            - ed25519
+
+    RegisterRuntimeRequest:
+      type: object
+      required:
+        - system_id
+        - deployment_id
+        - source_description
+        - classification
+        - assure
+      properties:
+        system_id:
+          type: string
+        deployment_id:
+          type: string
+        source_description:
+          $ref: '#/components/schemas/ClassifyRequest'
+          description: Approved system description used to derive baseline fingerprint and policy
+        classification:
+          $ref: '#/components/schemas/ClassifyResponse'
+        assure:
+          $ref: '#/components/schemas/AssureResponse'
+        probes:
+          type: object
+          additionalProperties:
+            type: boolean
+
+    RegisterRuntimeResponse:
+      type: object
+      required:
+        - baseline
+        - policy
+        - disclaimer
+      properties:
+        baseline:
+          $ref: '#/components/schemas/RuntimeBaseline'
+        policy:
+          $ref: '#/components/schemas/RuntimePolicy'
+        disclaimer:
+          type: string
+
+    VerifyRuntimeRequest:
+      type: object
+      required:
+        - observation
+      properties:
+        observation:
+          $ref: '#/components/schemas/RuntimeObservation'
+        policy:
+          $ref: '#/components/schemas/RuntimePolicy'
+          description: Optional inline policy; omit to use registered policy
+        baseline:
+          $ref: '#/components/schemas/RuntimeBaseline'
+          description: Optional inline baseline; omit to use registered baseline
+
+    VerifyRuntimeResponse:
+      type: object
+      required:
+        - result
+        - receipt
+      properties:
+        result:
+          $ref: '#/components/schemas/VerificationResult'
+        receipt:
+          $ref: '#/components/schemas/VerificationReceipt'
+
+    ObserveRuntimeResponse:
+      type: object
+      required:
+        - accepted
+      properties:
+        accepted:
+          type: boolean
+        message:
+          type: string
+
+    RuntimeStatusResponse:
+      type: object
+      required:
+        - system_id
+        - conformity_state
+        - disclaimer
+      properties:
+        system_id:
+          type: string
+        deployment_id:
+          type: string
+        conformity_state:
+          $ref: '#/components/schemas/ConformityState'
+        last_verified_at:
+          type: string
+          format: date-time
+        policy_version:
+          type: string
+        violation_count:
+          type: integer
+        disclaimer:
+          type: string
+
+    RuntimeHistoryResponse:
+      type: object
+      required:
+        - system_id
+        - receipts
+        - disclaimer
+      properties:
+        system_id:
+          type: string
+        receipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationReceipt'
+        disclaimer:
+          type: string
 
     ErrorResponse:
       type: object
