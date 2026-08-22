@@ -1120,6 +1120,36 @@ components:
         baseline:
           $ref: '#/components/schemas/RuntimeBaseline'
           description: Optional inline baseline; omit to use registered baseline
+        previous_receipt_hash:
+          type: string
+          description: Optional prior receipt_hash to extend the local verification chain
+
+    VerificationReceiptBundle:
+      type: object
+      description: |
+        Ed25519-signed runtime verification export. Local signing for offline
+        verification — not a public blockchain ledger.
+      required:
+        - payload
+        - signature
+        - public_key
+        - algorithm
+        - disclaimer
+      properties:
+        payload:
+          $ref: '#/components/schemas/VerificationReceipt'
+        signature:
+          type: string
+          description: Hex-encoded Ed25519 signature
+        public_key:
+          type: string
+          description: Hex-encoded Ed25519 public key
+        algorithm:
+          type: string
+          enum:
+            - ed25519
+        disclaimer:
+          type: string
 
     VerifyRuntimeResponse:
       type: object

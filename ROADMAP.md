@@ -27,7 +27,7 @@ Public signal of direction. If it is not listed here, assume it is not being bui
 
 ## Planned (not started)
 
-- **Runtime assurance (Phase 2–3 done):** `pkg/runtime` engine + `POST /v1/runtime/{register,verify,observe}` handlers; signed `VerificationReceipt` (Phase 4 next)
+- **Runtime assurance (Phase 4 done):** Ed25519-signed `VerificationReceiptBundle`, receipt hash chain, CLI `runtime verify --sign` and unified `verify` for receipt bundles
 - **Integrations (Phase 1 done):** `integrations/n8n` scaffold (Classify, Assure, Compare); Verify Runtime node after runtime API ships
 - Executive / GRC dashboard
 - Third-party / vendor risk portal
