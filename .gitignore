@@ -29,6 +29,8 @@ coverage.txt
 
 # Generated clients (keep stubs; ignore regen noise if present)
 clients/**/node_modules/
+integrations/**/node_modules/
+integrations/**/dist/
 clients/**/__pycache__/
 clients/**/*.egg-info/
 clients/python/dist/
